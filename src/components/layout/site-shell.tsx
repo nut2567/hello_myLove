@@ -19,12 +19,15 @@ export function SiteShell({ children }: SiteShellProps) {
             className="hidden items-center gap-6 text-sm text-muted-foreground sm:flex"
             aria-label="Primary navigation"
           >
-            <a className="transition-colors hover:text-foreground" href="#structure">
+            <a
+              className="transition-colors hover:text-foreground"
+              href="/structure"
+            >
               Structure
             </a>
-            <a className="transition-colors hover:text-foreground" href="#stack">
+            {/* <a className="transition-colors hover:text-foreground" href="/stack">
               Stack
-            </a>
+            </a> */}
           </nav>
         </div>
       </header>
@@ -33,8 +36,7 @@ export function SiteShell({ children }: SiteShellProps) {
 
       <footer id="stack" className="border-t border-border bg-surface">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-6 py-6 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <p>{siteConfig.name} is ready for Next.js 16 development.</p>
-          <p>Tailwind CSS 4 theme tokens live in `src/app/globals.css`.</p>
+          <p>app by nutศึ แวะมาดูบ่อยเดี๋ยวมีอะไรให้เล่น</p>
         </div>
       </footer>
     </div>

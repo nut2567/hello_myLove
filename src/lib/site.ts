@@ -1,5 +1,5 @@
 export const siteConfig = {
-  name: "Hello MyLove",
+  name: "Hello Unew",
   title: "A structured Next 16 app foundation.",
   description:
     "The starter screen is now split into route, layout, home, UI, and data layers with Tailwind CSS 4 driving the design tokens.",
@@ -18,7 +18,8 @@ export const stackItems = [
   {
     label: "React",
     value: "19.2.4",
-    detail: "Server Components first, with client components added only as needed.",
+    detail:
+      "Server Components first, with client components added only as needed.",
   },
   {
     label: "Tailwind",
