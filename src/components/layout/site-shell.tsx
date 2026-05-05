@@ -26,7 +26,13 @@ export function SiteShell({ children }: SiteShellProps) {
               Structure
             </a>
             <a className="transition-colors hover:text-foreground" href="/Ship">
-              Stack
+              Ship
+            </a>
+            <a
+              className="transition-colors hover:text-foreground"
+              href="/RobotDragGame"
+            >
+              Robot Drag Game
             </a>
           </nav>
         </div>
