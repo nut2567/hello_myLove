@@ -9,8 +9,8 @@ type SiteShellProps = {
 
 export function SiteShell({ children }: SiteShellProps) {
   return (
-    <div className="min-h-dvh bg-background text-foreground">
-      <header className="border-b border-border bg-surface/90">
+    <div className="flex min-h-dvh flex-col bg-background text-foreground">
+      <header className="shrink-0 border-b border-border bg-surface/90">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-6 px-6 py-4">
           <Link className="text-base font-semibold text-foreground" href="/">
             {siteConfig.name}
@@ -25,16 +25,16 @@ export function SiteShell({ children }: SiteShellProps) {
             >
               Structure
             </a>
-            {/* <a className="transition-colors hover:text-foreground" href="/stack">
+            <a className="transition-colors hover:text-foreground" href="/Ship">
               Stack
-            </a> */}
+            </a>
           </nav>
         </div>
       </header>
 
-      <main>{children}</main>
+      <main className="flex flex-1 flex-col">{children}</main>
 
-      <footer id="stack" className="border-t border-border bg-surface">
+      <footer id="stack" className="shrink-0 border-t border-border bg-surface">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-6 py-6 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <p>app by nutศึ แวะมาดูบ่อยเดี๋ยวมีอะไรให้เล่น</p>
         </div>

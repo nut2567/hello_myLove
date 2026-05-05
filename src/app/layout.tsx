@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { siteConfig } from "@/lib/site";
-import { SiteShell } from "@/components/layout/site-shell";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -31,9 +31,7 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full`}
     >
-      <body>
-        <SiteShell>{children}</SiteShell>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
