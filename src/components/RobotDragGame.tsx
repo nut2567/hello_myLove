@@ -286,17 +286,19 @@ export default function RobotDragGame() {
     visibleUntil: 0,
   });
   const motionsRef = useRef<RobotMotions>(createRobotMotions(getNow()));
-  const speechSchedulesRef = useRef<SpeechSchedules>(createSpeechSchedules(getNow()));
+  const speechSchedulesRef = useRef<SpeechSchedules>(
+    createSpeechSchedules(getNow()),
+  );
   const speechVisibleRef = useRef<RobotSpeech>(createEmptySpeech());
-  const [positions, setPositions] = useState<RobotPositions>(createRobotPositions);
+  const [positions, setPositions] =
+    useState<RobotPositions>(createRobotPositions);
   const [targetArea, setTargetArea] = useState<TargetArea>(createTargetArea);
   const [difficulty, setDifficulty] = useState<Difficulty>("easy");
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [isWin, setIsWin] = useState(false);
   const [isTargetFlashing, setIsTargetFlashing] = useState(false);
-  const [speechVisible, setSpeechVisible] = useState<RobotSpeech>(
-    createEmptySpeech,
-  );
+  const [speechVisible, setSpeechVisible] =
+    useState<RobotSpeech>(createEmptySpeech);
 
   useEffect(() => {
     dragStateRef.current = dragState;
@@ -352,13 +354,14 @@ export default function RobotDragGame() {
               const visibleUntil = now + randomBetween(1700, 3200);
 
               speechSchedulesRef.current[robot.id] = {
-                nextAt: visibleUntil + randomBetween(3500, 9000),
+                nextAt: visibleUntil + randomBetween(5000, 29000),
                 visibleUntil,
               };
             }
 
             nextSpeech[robot.id] =
-              isWalking && now < speechSchedulesRef.current[robot.id].visibleUntil;
+              isWalking &&
+              now < speechSchedulesRef.current[robot.id].visibleUntil;
           });
 
           robots.forEach((robot) => {
@@ -409,7 +412,10 @@ export default function RobotDragGame() {
                 };
               }
 
-              if (clampedX !== currentPosition.x || clampedY !== currentPosition.y) {
+              if (
+                clampedX !== currentPosition.x ||
+                clampedY !== currentPosition.y
+              ) {
                 nextPositions[robot.id] = {
                   x: clampedX,
                   y: clampedY,
@@ -438,7 +444,8 @@ export default function RobotDragGame() {
 
           if (now >= targetFlashRef.current.nextAt) {
             const visibleUntil =
-              now + randomBetween(flashConfig.durationMin, flashConfig.durationMax);
+              now +
+              randomBetween(flashConfig.durationMin, flashConfig.durationMax);
 
             targetFlashRef.current = {
               nextAt:
@@ -460,7 +467,10 @@ export default function RobotDragGame() {
     return () => cancelAnimationFrame(animationFrame);
   }, []);
 
-  function getPositionFromPointer(event: PointerEvent<HTMLDivElement>, drag: DragState) {
+  function getPositionFromPointer(
+    event: PointerEvent<HTMLDivElement>,
+    drag: DragState,
+  ) {
     const gameArea = gameAreaRef.current;
 
     if (!gameArea) {
@@ -495,8 +505,10 @@ export default function RobotDragGame() {
 
     setDragState({
       id,
-      offsetX: event.clientX - rect.left - (currentPosition.x / 100) * rect.width,
-      offsetY: event.clientY - rect.top - (currentPosition.y / 100) * rect.height,
+      offsetX:
+        event.clientX - rect.left - (currentPosition.x / 100) * rect.width,
+      offsetY:
+        event.clientY - rect.top - (currentPosition.y / 100) * rect.height,
     });
   }
 
@@ -590,7 +602,7 @@ export default function RobotDragGame() {
   return (
     <main
       ref={gameAreaRef}
-      className="fixed inset-0 z-50 overflow-hidden bg-black text-white touch-none"
+      className="fixed inset-0 z-50 overflow bg-black text-white touch-none"
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
     >

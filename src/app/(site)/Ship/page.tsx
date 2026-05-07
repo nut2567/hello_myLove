@@ -10,9 +10,5 @@ const ShipScene = dynamic(() => import("@/components/ShipScene"), {
 });
 
 export default function ShipPage() {
-  return (
-    <main className="h-dvh w-full overflow-hidden">
-      <ShipScene />
-    </main>
-  );
+  return <ShipScene />;
 }
