@@ -27,7 +27,7 @@ export function SiteShell({ children }: SiteShellProps) {
             </Link>
             <Link
               className="transition-colors hover:text-foreground"
-              href="/th"
+              href="/th/heart"
             >
               Heart
             </Link>
