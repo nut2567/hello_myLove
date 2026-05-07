@@ -4,9 +4,9 @@ import { IoMdHeart } from "react-icons/io";
 
 export default function Home() {
   return (
-    <div className="flex h-full my-auto items-center justify-center">
+    <div className="flex items-start justify-center">
       <ViewTransition name={`IoMdHeart`}>
-        <Link href="/A">
+        <Link href="/">
           <IoMdHeart className="text-red-300 size-20 cursor-pointer" />
         </Link>
       </ViewTransition>
