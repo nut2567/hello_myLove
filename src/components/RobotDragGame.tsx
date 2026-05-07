@@ -24,7 +24,7 @@ export default function RobotDragGame() {
       >
         <Link
           className="rounded-md bg-white px-3 py-2 text-sm font-bold tracking-normal text-slate-950 transition hover:bg-cyan-100"
-          href="/th/heart"
+          href="/"
         >
           Exit
         </Link>

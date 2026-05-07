@@ -7,6 +7,14 @@ type CatchAllPageProps = {
   }>;
 };
 
+const formClassName = "grid w-full max-w-lg gap-4";
+const labelClassName = "text-sm font-medium leading-6 text-foreground";
+const fieldGroupClassName = "grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]";
+const inputClassName =
+  "h-12 min-w-0 rounded-md border border-border bg-surface px-4 text-base text-foreground shadow-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/25";
+const buttonClassName =
+  "inline-flex h-12 items-center justify-center rounded-md border border-accent bg-accent px-5 text-sm font-semibold text-accent-foreground shadow-sm transition-colors hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+
 function normalizeSubmittedPath(value: FormDataEntryValue | null) {
   const rawPath = typeof value === "string" ? value.trim() : "";
 
@@ -27,32 +35,28 @@ async function goToSubmittedPath(formData: FormData) {
 
 function HomePageContent() {
   return (
-    <div className="flex flex-1 items-center justify-center px-6">
-      <form
-        action={goToSubmittedPath}
-        className="flex w-full max-w-md flex-col gap-3 sm:flex-row"
-      >
-        <label className="sr-only" htmlFor="path">
-          Path
+    <div className="flex flex-1 items-center justify-center px-6 py-12">
+      <form action={goToSubmittedPath} className={formClassName}>
+        <label className={labelClassName} htmlFor="path">
+          พิมพ์ชื่อตัวเองใน Path เพื่อไปยังหน้าเฉพาะของคุณ
         </label>
-        <input
-          autoCapitalize="none"
-          autoComplete="off"
-          className="h-11 min-w-0 flex-1 rounded-md border border-border bg-surface px-4 text-base text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/25"
-          id="path"
-          inputMode="url"
-          name="path"
-          placeholder="ตัวอย่าง /nut"
-          required
-          spellCheck={false}
-          type="text"
-        />
-        <button
-          className="inline-flex h-11 items-center justify-center rounded-md border border-accent bg-accent px-5 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-          type="submit"
-        >
-          Submit
-        </button>
+        <div className={fieldGroupClassName}>
+          <input
+            autoCapitalize="none"
+            autoComplete="off"
+            className={inputClassName}
+            id="path"
+            inputMode="url"
+            name="path"
+            placeholder="Example /nut"
+            required
+            spellCheck={false}
+            type="text"
+          />
+          <button className={buttonClassName} type="submit">
+            Submit
+          </button>
+        </div>
       </form>
     </div>
   );
@@ -72,7 +76,7 @@ export default async function CatchAllPage({ params }: CatchAllPageProps) {
       <p className="text-sm uppercase tracking-wide text-neutral-500">
         Dynamic path
       </p>
-      <h1 className="max-w-3xl wrap-break-word text-3xl font-semibold text-neutral-950">
+      <h1 className="max-w-3xl break-words text-3xl font-semibold text-neutral-950">
         {pathname}
       </h1>
     </main>
