@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState, type PointerEvent } from "react";
 
+import { PixelRobot } from "@/components/PixelRobot";
+
 type RobotId = "bolt" | "chip" | "byte" | "nix" | "pixel";
 type Difficulty = "easy" | "medium" | "hard";
 
@@ -26,6 +28,7 @@ type RobotMotion = {
 };
 
 type RobotMotions = Record<RobotId, RobotMotion>;
+type RobotMovement = Record<RobotId, boolean>;
 type RobotSpeech = Record<RobotId, boolean>;
 
 type SpeechSchedule = {
@@ -142,6 +145,16 @@ function createEmptyMotions(): RobotMotions {
     byte: { vx: 0, vy: 0, changeAt: 0, pauseUntil: 0 },
     nix: { vx: 0, vy: 0, changeAt: 0, pauseUntil: 0 },
     pixel: { vx: 0, vy: 0, changeAt: 0, pauseUntil: 0 },
+  };
+}
+
+function createEmptyMovement(): RobotMovement {
+  return {
+    bolt: false,
+    chip: false,
+    byte: false,
+    nix: false,
+    pixel: false,
   };
 }
 
@@ -279,39 +292,6 @@ function canDragRobot(
   return !EVASIVE_ROBOT_IDS.has(id);
 }
 
-function PixelRobot({
-  accentClassName,
-  isDragging,
-  name,
-}: {
-  accentClassName: string;
-  isDragging: boolean;
-  name: string;
-}) {
-  return (
-    <div
-      aria-label={`${name} robot`}
-      className={[
-        "relative h-12 w-12 select-none",
-        // isCatchable ? "drop-shadow-[0_0_14px_rgba(52,211,153,0.95)]" : "",
-        isDragging ? "scale-110" : "scale-100",
-      ].join(" ")}
-    >
-      <div className="absolute left-1/2 top-0 h-2 w-5 -translate-x-1/2 bg-zinc-200" />
-      <div className="absolute left-1/2 top-1 h-2 w-2 -translate-x-1/2 bg-red-400" />
-      <div className="absolute left-1 top-3 h-7 w-10 border-4 border-zinc-100 bg-zinc-700">
-        <div className="absolute left-2 top-2 h-2 w-2 bg-black" />
-        <div className="absolute right-2 top-2 h-2 w-2 bg-black" />
-        <div className="absolute bottom-1 left-1/2 h-1 w-4 -translate-x-1/2 bg-zinc-200" />
-      </div>
-      <div className={`absolute left-0 top-5 h-4 w-2 ${accentClassName}`} />
-      <div className={`absolute right-0 top-5 h-4 w-2 ${accentClassName}`} />
-      <div className={`absolute bottom-0 left-3 h-2 w-2 ${accentClassName}`} />
-      <div className={`absolute bottom-0 right-3 h-2 w-2 ${accentClassName}`} />
-    </div>
-  );
-}
-
 export default function RobotDragGameV1() {
   const gameAreaRef = useRef<HTMLDivElement>(null);
   const dragStateRef = useRef<DragState | null>(null);
@@ -332,6 +312,7 @@ export default function RobotDragGameV1() {
     visibleUntil: 0,
   });
   const motionsRef = useRef<RobotMotions>(createRobotMotions(getNow()));
+  const robotMovementRef = useRef<RobotMovement>(createEmptyMovement());
   const speechSchedulesRef = useRef<SpeechSchedules>(
     createSpeechSchedules(getNow()),
   );
@@ -344,6 +325,8 @@ export default function RobotDragGameV1() {
   const [isWin, setIsWin] = useState(false);
   const [isTargetFlashing, setIsTargetFlashing] = useState(false);
   const [hardCatchableId, setHardCatchableId] = useState<RobotId | null>(null);
+  const [robotMovement, setRobotMovement] =
+    useState<RobotMovement>(createEmptyMovement);
   const [speechVisible, setSpeechVisible] =
     useState<RobotSpeech>(createEmptySpeech);
 
@@ -447,16 +430,24 @@ export default function RobotDragGameV1() {
 
           setPositions((currentPositions) => {
             let didMove = false;
+            let movementChanged = false;
+            const nextMovement = createEmptyMovement();
             const nextPositions: RobotPositions = { ...currentPositions };
 
             robots.forEach((robot) => {
               if (robot.id === draggedId) {
+                if (robotMovementRef.current[robot.id]) {
+                  movementChanged = true;
+                }
                 return;
               }
 
               const motion = motionsRef.current[robot.id];
 
               if (now < motion.pauseUntil) {
+                if (robotMovementRef.current[robot.id]) {
+                  movementChanged = true;
+                }
                 return;
               }
 
@@ -525,13 +516,23 @@ export default function RobotDragGameV1() {
                 clampedX !== currentPosition.x ||
                 clampedY !== currentPosition.y
               ) {
+                nextMovement[robot.id] = true;
                 nextPositions[robot.id] = {
                   x: clampedX,
                   y: clampedY,
                 };
                 didMove = true;
               }
+
+              if (robotMovementRef.current[robot.id] !== nextMovement[robot.id]) {
+                movementChanged = true;
+              }
             });
+
+            if (movementChanged) {
+              robotMovementRef.current = nextMovement;
+              setRobotMovement(nextMovement);
+            }
 
             return didMove ? nextPositions : currentPositions;
           });
@@ -743,6 +744,7 @@ export default function RobotDragGameV1() {
       id: nextHardCatchableId,
     };
     motionsRef.current = createRobotMotions(now);
+    robotMovementRef.current = createEmptyMovement();
     speechSchedulesRef.current = createSpeechSchedules(now);
     speechVisibleRef.current = createEmptySpeech();
     targetFlashRef.current = {
@@ -755,6 +757,7 @@ export default function RobotDragGameV1() {
     setIsWin(false);
     setIsTargetFlashing(nextDifficulty === "hard");
     setHardCatchableId(nextHardCatchableId);
+    setRobotMovement(createEmptyMovement());
     setSpeechVisible(createEmptySpeech());
     setPositions(createRobotPositions());
     setTargetArea(createTargetArea());
@@ -807,19 +810,15 @@ export default function RobotDragGameV1() {
       {robots.map((robot) => {
         const position = positions[robot.id];
         const isDragging = dragState?.id === robot.id;
-        const isCatchable =
-          difficulty === "hard" && hardCatchableId === robot.id;
+        const isDraggable = canDragRobot(robot.id, difficulty, hardCatchableId);
+        const isWalking = !isDraggable || robotMovement[robot.id];
         const showSpeech = speechVisible[robot.id] && !isDragging && !isWin;
 
         return (
           <div
             key={robot.id}
             className={[
-              "absolute touch-none transition-transform duration-100",
-              isCatchable ||
-              !isRobotEvasive(robot.id, difficulty, hardCatchableId)
-                ? "cursor-grab active:cursor-grabbing"
-                : "cursor-not-allowed",
+              "absolute cursor-grab touch-none transition-transform duration-100 active:cursor-grabbing",
               isDragging ? "z-20" : "z-10",
             ].join(" ")}
             onPointerDown={(event) => handlePointerDown(robot.id, event)}
@@ -837,6 +836,7 @@ export default function RobotDragGameV1() {
             <PixelRobot
               accentClassName={robot.accentClassName}
               isDragging={isDragging}
+              isMoving={isWalking && !isDragging}
               name={robot.name}
             />
           </div>
