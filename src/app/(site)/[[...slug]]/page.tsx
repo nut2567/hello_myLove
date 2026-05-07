@@ -1,7 +1,3 @@
-import Link from "next/link";
-import { ViewTransition } from "react";
-import { IoMdHeart } from "react-icons/io";
-
 type CatchAllPageProps = {
   params: Promise<{
     slug?: string[];
@@ -28,7 +24,7 @@ export default async function CatchAllPage({ params }: CatchAllPageProps) {
       <p className="text-sm uppercase tracking-wide text-neutral-500">
         Dynamic path
       </p>
-      <h1 className="max-w-3xl break-words text-3xl font-semibold text-neutral-950">
+      <h1 className="max-w-3xl wrap-break-word text-3xl font-semibold text-neutral-950">
         {pathname}
       </h1>
     </main>

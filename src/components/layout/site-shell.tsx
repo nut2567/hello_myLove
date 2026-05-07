@@ -19,27 +19,30 @@ export function SiteShell({ children }: SiteShellProps) {
             className="hidden items-center gap-6 text-sm text-muted-foreground sm:flex"
             aria-label="Primary navigation"
           >
-            <a
+            <Link
               className="transition-colors hover:text-foreground"
               href="/th/structure"
             >
               Structure
-            </a>
-            <a className="transition-colors hover:text-foreground" href="/th">
+            </Link>
+            <Link
+              className="transition-colors hover:text-foreground"
+              href="/th"
+            >
               Heart
-            </a>
-            <a
+            </Link>
+            <Link
               className="transition-colors hover:text-foreground"
               href="/th/logo"
             >
               Logo
-            </a>
-            <a
+            </Link>
+            <Link
               className="transition-colors hover:text-foreground"
               href="/th/RobotDragGame"
             >
               Robot Drag Game
-            </a>
+            </Link>
           </nav>
         </div>
       </header>
