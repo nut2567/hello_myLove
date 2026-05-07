@@ -21,16 +21,22 @@ export function SiteShell({ children }: SiteShellProps) {
           >
             <a
               className="transition-colors hover:text-foreground"
-              href="/structure"
+              href="/th/structure"
             >
               Structure
             </a>
-            <a className="transition-colors hover:text-foreground" href="/Ship">
-              Ship
+            <a className="transition-colors hover:text-foreground" href="/th">
+              Heart
             </a>
             <a
               className="transition-colors hover:text-foreground"
-              href="/RobotDragGame"
+              href="/th/logo"
+            >
+              Logo
+            </a>
+            <a
+              className="transition-colors hover:text-foreground"
+              href="/th/RobotDragGame"
             >
               Robot Drag Game
             </a>

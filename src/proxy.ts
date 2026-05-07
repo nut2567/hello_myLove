@@ -1,4 +1,8 @@
-import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
+import {
+  NextResponse,
+  type NextFetchEvent,
+  type NextRequest,
+} from "next/server";
 
 type VisitorPayload = {
   pathname: string;
@@ -16,11 +20,13 @@ type VisitorPayload = {
 const ASSET_EXTENSION_PATTERN =
   /\.(?:avif|css|gif|ico|jpeg|jpg|js|json|map|png|svg|webp|woff2?)$/i;
 
-const EXCLUDED_PATHS = new Set([
-  "/favicon.ico",
-  "/robots.txt",
-  "/sitemap.xml",
-]);
+const EXCLUDED_PATHS = new Set(["/favicon.ico", "/robots.txt", "/sitemap.xml"]);
+
+const EXCLUDED_PATH_PREFIXES = ["/th", "/"];
+
+function matchesPathOrPrefix(pathname: string, pathPrefix: string): boolean {
+  return pathname === pathPrefix || pathname.startsWith(`${pathPrefix}/`);
+}
 
 function getNullableHeader(headers: Headers, name: string): string | null {
   const value = headers.get(name)?.trim();
@@ -28,7 +34,10 @@ function getNullableHeader(headers: Headers, name: string): string | null {
   return value && value.length > 0 ? value : null;
 }
 
-function getDecodedNullableHeader(headers: Headers, name: string): string | null {
+function getDecodedNullableHeader(
+  headers: Headers,
+  name: string,
+): string | null {
   const value = getNullableHeader(headers, name);
 
   if (!value) {
@@ -72,6 +81,14 @@ function shouldTrackRequest(request: NextRequest): boolean {
   }
 
   if (
+    EXCLUDED_PATH_PREFIXES.some((pathPrefix) =>
+      matchesPathOrPrefix(pathname, pathPrefix),
+    )
+  ) {
+    return false;
+  }
+
+  if (
     pathname.startsWith("/_next/static") ||
     pathname.startsWith("/_next/image") ||
     pathname.startsWith("/_next/data") ||
@@ -109,7 +126,10 @@ function createVisitorPayload(request: NextRequest): VisitorPayload {
       "x-vercel-ip-country-region",
     ),
     latitude: getDecodedNullableHeader(request.headers, "x-vercel-ip-latitude"),
-    longitude: getDecodedNullableHeader(request.headers, "x-vercel-ip-longitude"),
+    longitude: getDecodedNullableHeader(
+      request.headers,
+      "x-vercel-ip-longitude",
+    ),
   };
 }
 

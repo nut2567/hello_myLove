@@ -10,13 +10,7 @@ type CatchAllPageProps = {
 
 function HomePageContent() {
   return (
-    <div className="flex h-full my-auto items-center justify-center">
-      <ViewTransition name="IoMdHeart">
-        <Link href="/A">
-          <IoMdHeart className="text-red-300 size-20 cursor-pointer" />
-        </Link>
-      </ViewTransition>
-    </div>
+    <div className="flex h-full my-auto items-center justify-center"></div>
   );
 }
 
