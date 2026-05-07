@@ -51,6 +51,10 @@ type TargetArea = {
 const ROBOT_SIZE = 48;
 const TARGET_WIDTH = 15;
 const TARGET_HEIGHT = 17;
+const EVASIVE_ROBOT_IDS = new Set<RobotId>(["pixel"]);
+const EVASION_RADIUS = 132;
+const EVASION_SPEED = 12.5;
+const HARD_CATCHABLE_DURATION = 5000;
 const SPEECH_TEXT = "Drag me somewhere... maybe something will happen!";
 
 const difficulties: { id: Difficulty; label: string }[] = [
@@ -223,6 +227,15 @@ function createTargetArea(): TargetArea {
   };
 }
 
+function createHardCatchableId(previousId: RobotId | null = null): RobotId {
+  const availableRobots = robots.filter((robot) => robot.id !== previousId);
+  const nextRobot =
+    availableRobots[Math.floor(Math.random() * availableRobots.length)] ??
+    robots[0];
+
+  return nextRobot.id;
+}
+
 function createNextFlashAt(difficulty: Difficulty, now: number) {
   const config = getFlashConfig(difficulty);
 
@@ -242,6 +255,30 @@ function isInsideTarget(point: Point, target: TargetArea) {
   );
 }
 
+function isRobotEvasive(
+  id: RobotId,
+  difficulty: Difficulty,
+  hardCatchableId: RobotId | null,
+) {
+  if (difficulty === "hard") {
+    return id !== hardCatchableId;
+  }
+
+  return EVASIVE_ROBOT_IDS.has(id);
+}
+
+function canDragRobot(
+  id: RobotId,
+  difficulty: Difficulty,
+  hardCatchableId: RobotId | null,
+) {
+  if (difficulty === "hard") {
+    return id === hardCatchableId;
+  }
+
+  return !EVASIVE_ROBOT_IDS.has(id);
+}
+
 function PixelRobot({
   accentClassName,
   isDragging,
@@ -256,6 +293,7 @@ function PixelRobot({
       aria-label={`${name} robot`}
       className={[
         "relative h-12 w-12 select-none",
+        // isCatchable ? "drop-shadow-[0_0_14px_rgba(52,211,153,0.95)]" : "",
         isDragging ? "scale-110" : "scale-100",
       ].join(" ")}
     >
@@ -278,6 +316,14 @@ export default function RobotDragGameV1() {
   const gameAreaRef = useRef<HTMLDivElement>(null);
   const dragStateRef = useRef<DragState | null>(null);
   const capturedElementRef = useRef<HTMLDivElement | null>(null);
+  const pointerPositionRef = useRef<Point | null>(null);
+  const hardCatchableRef = useRef<{
+    expiresAt: number;
+    id: RobotId | null;
+  }>({
+    expiresAt: 0,
+    id: null,
+  });
   const isWinRef = useRef(false);
   const difficultyRef = useRef<Difficulty>("easy");
   const isTargetFlashingRef = useRef(false);
@@ -297,6 +343,7 @@ export default function RobotDragGameV1() {
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [isWin, setIsWin] = useState(false);
   const [isTargetFlashing, setIsTargetFlashing] = useState(false);
+  const [hardCatchableId, setHardCatchableId] = useState<RobotId | null>(null);
   const [speechVisible, setSpeechVisible] =
     useState<RobotSpeech>(createEmptySpeech);
 
@@ -322,12 +369,35 @@ export default function RobotDragGameV1() {
 
       if (!isWinRef.current) {
         const gameArea = gameAreaRef.current;
+        const currentDifficulty = difficultyRef.current;
+        const draggedId = dragStateRef.current?.id;
+
+        if (
+          currentDifficulty === "hard" &&
+          now >= hardCatchableRef.current.expiresAt &&
+          !draggedId
+        ) {
+          const nextHardCatchableId = createHardCatchableId(
+            hardCatchableRef.current.id,
+          );
+
+          hardCatchableRef.current = {
+            expiresAt: now + HARD_CATCHABLE_DURATION,
+            id: nextHardCatchableId,
+          };
+          setHardCatchableId(nextHardCatchableId);
+          setTargetArea(createTargetArea());
+
+          if (!isTargetFlashingRef.current) {
+            isTargetFlashingRef.current = true;
+            setIsTargetFlashing(true);
+          }
+        }
 
         if (gameArea) {
           const rect = gameArea.getBoundingClientRect();
           const maxX = Math.max(0, 100 - (ROBOT_SIZE / rect.width) * 100);
           const maxY = Math.max(0, 100 - (ROBOT_SIZE / rect.height) * 100);
-          const draggedId = dragStateRef.current?.id;
           const nextSpeech = createEmptySpeech();
           let speechChanged = false;
 
@@ -391,8 +461,47 @@ export default function RobotDragGameV1() {
               }
 
               const currentPosition = currentPositions[robot.id];
-              const nextX = currentPosition.x + motion.vx * delta;
-              const nextY = currentPosition.y + motion.vy * delta;
+              let nextX = currentPosition.x + motion.vx * delta;
+              let nextY = currentPosition.y + motion.vy * delta;
+
+              if (
+                isRobotEvasive(
+                  robot.id,
+                  currentDifficulty,
+                  hardCatchableRef.current.id,
+                )
+              ) {
+                const pointerPosition = pointerPositionRef.current;
+
+                if (pointerPosition) {
+                  const robotCenterX =
+                    (currentPosition.x / 100) * rect.width + ROBOT_SIZE / 2;
+                  const robotCenterY =
+                    (currentPosition.y / 100) * rect.height + ROBOT_SIZE / 2;
+                  const pointerX = (pointerPosition.x / 100) * rect.width;
+                  const pointerY = (pointerPosition.y / 100) * rect.height;
+                  const distanceX = robotCenterX - pointerX;
+                  const distanceY = robotCenterY - pointerY;
+                  const distance = Math.hypot(distanceX, distanceY);
+
+                  if (distance > 0 && distance < EVASION_RADIUS) {
+                    const pressure = 1 - distance / EVASION_RADIUS;
+                    const escapeSpeed = EVASION_SPEED * pressure;
+                    const escapeX = (distanceX / distance) * escapeSpeed;
+                    const escapeY = (distanceY / distance) * escapeSpeed;
+
+                    nextX += escapeX * delta;
+                    nextY += escapeY * delta;
+                    motionsRef.current[robot.id] = {
+                      vx: escapeX,
+                      vy: escapeY,
+                      changeAt: now + randomBetween(240, 620),
+                      pauseUntil: 0,
+                    };
+                  }
+                }
+              }
+
               const clampedX = clamp(nextX, 0, maxX);
               const clampedY = clamp(nextY, 0, maxY);
 
@@ -428,15 +537,29 @@ export default function RobotDragGameV1() {
           });
         }
 
-        const flashConfig = getFlashConfig(difficultyRef.current);
+        if (currentDifficulty === "hard") {
+          const shouldShowHardTarget =
+            hardCatchableRef.current.id !== null &&
+            now < hardCatchableRef.current.expiresAt;
 
-        if (!flashConfig) {
+          if (isTargetFlashingRef.current !== shouldShowHardTarget) {
+            isTargetFlashingRef.current = shouldShowHardTarget;
+            setIsTargetFlashing(shouldShowHardTarget);
+          }
+        }
+
+        const flashConfig =
+          currentDifficulty === "hard"
+            ? null
+            : getFlashConfig(currentDifficulty);
+
+        if (currentDifficulty !== "hard" && !flashConfig) {
           if (targetFlashRef.current.visibleUntil !== 0) {
             targetFlashRef.current.visibleUntil = 0;
             isTargetFlashingRef.current = false;
             setIsTargetFlashing(false);
           }
-        } else if (now >= targetFlashRef.current.visibleUntil) {
+        } else if (flashConfig && now >= targetFlashRef.current.visibleUntil) {
           if (isTargetFlashingRef.current) {
             isTargetFlashingRef.current = false;
             setIsTargetFlashing(false);
@@ -446,6 +569,10 @@ export default function RobotDragGameV1() {
             const visibleUntil =
               now +
               randomBetween(flashConfig.durationMin, flashConfig.durationMax);
+
+            if (currentDifficulty === "medium") {
+              setTargetArea(createTargetArea());
+            }
 
             targetFlashRef.current = {
               nextAt:
@@ -497,6 +624,19 @@ export default function RobotDragGameV1() {
     }
 
     event.preventDefault();
+
+    if (!canDragRobot(id, difficultyRef.current, hardCatchableRef.current.id)) {
+      const motion = createRobotMotion(getNow());
+
+      motionsRef.current[id] = {
+        vx: motion.vx * 1.8,
+        vy: motion.vy * 1.8,
+        changeAt: getNow() + randomBetween(380, 760),
+        pauseUntil: 0,
+      };
+      return;
+    }
+
     event.currentTarget.setPointerCapture(event.pointerId);
     capturedElementRef.current = event.currentTarget;
 
@@ -513,6 +653,17 @@ export default function RobotDragGameV1() {
   }
 
   function handlePointerMove(event: PointerEvent<HTMLDivElement>) {
+    const gameArea = gameAreaRef.current;
+
+    if (gameArea) {
+      const rect = gameArea.getBoundingClientRect();
+
+      pointerPositionRef.current = {
+        x: clamp(((event.clientX - rect.left) / rect.width) * 100, 0, 100),
+        y: clamp(((event.clientY - rect.top) / rect.height) * 100, 0, 100),
+      };
+    }
+
     if (!dragState || isWin) {
       return;
     }
@@ -570,14 +721,27 @@ export default function RobotDragGameV1() {
     }
   }
 
+  function handlePointerLeave() {
+    if (!dragStateRef.current) {
+      pointerPositionRef.current = null;
+    }
+  }
+
   function restartGame(nextDifficulty = difficultyRef.current) {
     const now = getNow();
 
     capturedElementRef.current = null;
     dragStateRef.current = null;
+    pointerPositionRef.current = null;
+    const nextHardCatchableId =
+      nextDifficulty === "hard" ? createHardCatchableId() : null;
     isWinRef.current = false;
     difficultyRef.current = nextDifficulty;
-    isTargetFlashingRef.current = false;
+    isTargetFlashingRef.current = nextDifficulty === "hard";
+    hardCatchableRef.current = {
+      expiresAt: nextDifficulty === "hard" ? now + HARD_CATCHABLE_DURATION : 0,
+      id: nextHardCatchableId,
+    };
     motionsRef.current = createRobotMotions(now);
     speechSchedulesRef.current = createSpeechSchedules(now);
     speechVisibleRef.current = createEmptySpeech();
@@ -589,7 +753,8 @@ export default function RobotDragGameV1() {
     setDifficulty(nextDifficulty);
     setDragState(null);
     setIsWin(false);
-    setIsTargetFlashing(false);
+    setIsTargetFlashing(nextDifficulty === "hard");
+    setHardCatchableId(nextHardCatchableId);
     setSpeechVisible(createEmptySpeech());
     setPositions(createRobotPositions());
     setTargetArea(createTargetArea());
@@ -599,10 +764,13 @@ export default function RobotDragGameV1() {
     restartGame(nextDifficulty);
   }
 
+  const shouldDisplayTargetArea = isTargetFlashing && difficulty !== "hard";
+
   return (
     <main
       ref={gameAreaRef}
       className="fixed inset-0 z-50 overflow bg-black text-white touch-none"
+      onPointerLeave={handlePointerLeave}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
     >
@@ -624,7 +792,7 @@ export default function RobotDragGameV1() {
         ))}
       </div>
 
-      {isTargetFlashing ? (
+      {shouldDisplayTargetArea ? (
         <div
           className="pointer-events-none absolute z-0 border-4 border-dashed border-emerald-200/35 bg-emerald-300/5 shadow-[0_0_24px_rgba(110,231,183,0.18)]"
           style={{
@@ -639,13 +807,19 @@ export default function RobotDragGameV1() {
       {robots.map((robot) => {
         const position = positions[robot.id];
         const isDragging = dragState?.id === robot.id;
+        const isCatchable =
+          difficulty === "hard" && hardCatchableId === robot.id;
         const showSpeech = speechVisible[robot.id] && !isDragging && !isWin;
 
         return (
           <div
             key={robot.id}
             className={[
-              "absolute cursor-grab touch-none transition-transform duration-100 active:cursor-grabbing",
+              "absolute touch-none transition-transform duration-100",
+              isCatchable ||
+              !isRobotEvasive(robot.id, difficulty, hardCatchableId)
+                ? "cursor-grab active:cursor-grabbing"
+                : "cursor-not-allowed",
               isDragging ? "z-20" : "z-10",
             ].join(" ")}
             onPointerDown={(event) => handlePointerDown(robot.id, event)}

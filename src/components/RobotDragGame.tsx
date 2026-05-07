@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 import RobotDragGameV1 from "@/components/RobotDragGameV1";
@@ -17,7 +18,16 @@ export default function RobotDragGame() {
     <>
       <SelectedGame key={version} />
 
-      <div className="fixed bottom-4 right-4 z-[60] flex gap-1 rounded-lg border border-white/15 bg-slate-950/82 p-1 shadow-2xl backdrop-blur">
+      <div
+        className="fixed bottom-4 right-4 flex gap-1 rounded-lg border border-white/15 bg-slate-950/82 p-1 shadow-2xl backdrop-blur"
+        style={{ pointerEvents: "auto", zIndex: 1000 }}
+      >
+        <Link
+          className="rounded-md bg-white px-3 py-2 text-sm font-bold tracking-normal text-slate-950 transition hover:bg-cyan-100"
+          href="/th/heart"
+        >
+          Exit
+        </Link>
         {versions.map((versionOption) => (
           <button
             key={versionOption}
