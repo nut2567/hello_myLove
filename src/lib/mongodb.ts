@@ -35,7 +35,8 @@ function createMongoClient(uri: string): MongoClient {
 }
 
 export async function getMongoClient(): Promise<MongoClient> {
-  const uri = process.env.MONGODB_URI;
+  const uri =
+    process.env.MONGODB_URI ?? process.env.nana_technology_MONGODB_URI;
 
   if (!uri) {
     throw new Error("MONGODB_URI is not configured.");

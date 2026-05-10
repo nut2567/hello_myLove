@@ -1,6 +1,11 @@
 "use client";
 
-import { ContactShadows, Environment, Html, OrbitControls } from "@react-three/drei";
+import {
+  ContactShadows,
+  Environment,
+  Html,
+  OrbitControls,
+} from "@react-three/drei";
 import {
   Canvas,
   type ThreeEvent,
@@ -17,14 +22,7 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
-import {
-  Color,
-  MathUtils,
-  Plane,
-  Vector3,
-  type Group,
-  type Mesh,
-} from "three";
+import { Color, MathUtils, Plane, Vector3, type Group, type Mesh } from "three";
 
 type RobotId = "bolt" | "chip" | "byte" | "nix" | "pixel";
 type Difficulty = "easy" | "medium" | "hard";
@@ -223,7 +221,10 @@ function createRobotMotion(now: number, difficulty: Difficulty): RobotMotion {
 
 function createRobotMotions(now: number, difficulty: Difficulty): RobotMotions {
   return robotConfigs.reduce<RobotMotions>((motions, robot) => {
-    motions[robot.id] = createRobotMotion(now + randomBetween(0, 600), difficulty);
+    motions[robot.id] = createRobotMotion(
+      now + randomBetween(0, 600),
+      difficulty,
+    );
 
     return motions;
   }, {} as RobotMotions);
@@ -231,11 +232,17 @@ function createRobotMotions(now: number, difficulty: Difficulty): RobotMotions {
 
 function createFlashSchedule(now: number, difficulty: Difficulty) {
   const settings = difficulties[difficulty];
-  const duration = randomBetween(settings.flashDuration[0], settings.flashDuration[1]);
+  const duration = randomBetween(
+    settings.flashDuration[0],
+    settings.flashDuration[1],
+  );
 
   return {
-    nextAt: now + randomBetween(settings.flashInterval[0], settings.flashInterval[1]),
-    visibleUntil: settings.alwaysVisible ? Number.POSITIVE_INFINITY : now + duration,
+    nextAt:
+      now + randomBetween(settings.flashInterval[0], settings.flashInterval[1]),
+    visibleUntil: settings.alwaysVisible
+      ? Number.POSITIVE_INFINITY
+      : now + duration,
   };
 }
 
@@ -259,28 +266,55 @@ function countCaptured(states: RobotStates) {
 function ArenaFloor({ capturedCount }: { capturedCount: number }) {
   return (
     <group>
-      <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]}>
+      <mesh
+        receiveShadow
+        rotation={[-Math.PI / 2, 0, 0]}
+        position={[0, -0.02, 0]}
+      >
         <planeGeometry args={[ARENA_WIDTH + 1.4, ARENA_DEPTH + 1.4]} />
-        <meshStandardMaterial color="#07111f" roughness={0.72} metalness={0.08} />
+        <meshStandardMaterial
+          color="#07111f"
+          roughness={0.72}
+          metalness={0.08}
+        />
       </mesh>
 
-      <gridHelper args={[11, 22, "#38bdf8", "#1e293b"]} position={[0, 0.004, 0]} />
+      <gridHelper
+        args={[11, 22, "#38bdf8", "#1e293b"]}
+        position={[0, 0.004, 0]}
+      />
 
       <mesh receiveShadow position={[0, 0.12, -HALF_DEPTH - 0.06]}>
         <boxGeometry args={[ARENA_WIDTH, 0.24, 0.12]} />
-        <meshStandardMaterial color="#164e63" roughness={0.4} metalness={0.25} />
+        <meshStandardMaterial
+          color="#164e63"
+          roughness={0.4}
+          metalness={0.25}
+        />
       </mesh>
       <mesh receiveShadow position={[0, 0.12, HALF_DEPTH + 0.06]}>
         <boxGeometry args={[ARENA_WIDTH, 0.24, 0.12]} />
-        <meshStandardMaterial color="#164e63" roughness={0.4} metalness={0.25} />
+        <meshStandardMaterial
+          color="#164e63"
+          roughness={0.4}
+          metalness={0.25}
+        />
       </mesh>
       <mesh receiveShadow position={[-HALF_WIDTH - 0.06, 0.12, 0]}>
         <boxGeometry args={[0.12, 0.24, ARENA_DEPTH]} />
-        <meshStandardMaterial color="#164e63" roughness={0.4} metalness={0.25} />
+        <meshStandardMaterial
+          color="#164e63"
+          roughness={0.4}
+          metalness={0.25}
+        />
       </mesh>
       <mesh receiveShadow position={[HALF_WIDTH + 0.06, 0.12, 0]}>
         <boxGeometry args={[0.12, 0.24, ARENA_DEPTH]} />
-        <meshStandardMaterial color="#164e63" roughness={0.4} metalness={0.25} />
+        <meshStandardMaterial
+          color="#164e63"
+          roughness={0.4}
+          metalness={0.25}
+        />
       </mesh>
 
       {robotConfigs.map((robot, index) => {
@@ -332,9 +366,14 @@ function TargetBeacon({
 
   return (
     <group ref={groupRef} position={[point.x, 0.05, point.z]} visible={visible}>
-      <pointLight color="#22d3ee" intensity={1.8} distance={3.8} position={[0, 0.55, 0]} />
+      <pointLight
+        color="#22d3ee"
+        intensity={1.8}
+        distance={3.8}
+        position={[0, 0.55, 0]}
+      />
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[radius * 0.68, radius, 64]} />
+        <ringGeometry args={[radius * 0.88, radius, 100]} />
         <meshStandardMaterial
           color="#67e8f9"
           emissive="#0891b2"
@@ -400,7 +439,9 @@ function RobotModel({
     group.position.y = MathUtils.lerp(group.position.y, targetY, delta * 9);
     group.position.z = MathUtils.lerp(group.position.z, state.z, delta * 14);
     group.rotation.y = MathUtils.lerp(group.rotation.y, state.yaw, delta * 8);
-    group.scale.setScalar(MathUtils.lerp(group.scale.x, targetScale, delta * 9));
+    group.scale.setScalar(
+      MathUtils.lerp(group.scale.x, targetScale, delta * 9),
+    );
 
     if (head) {
       head.rotation.y = Math.sin(elapsed * 2.4) * 0.16;
@@ -453,7 +494,11 @@ function RobotModel({
 
       <mesh castShadow position={[0, 0.84, 0]} rotation={[0, 0, 0]}>
         <cylinderGeometry args={[0.025, 0.025, 0.28, 12]} />
-        <meshStandardMaterial color="#cbd5e1" metalness={0.5} roughness={0.28} />
+        <meshStandardMaterial
+          color="#cbd5e1"
+          metalness={0.5}
+          roughness={0.28}
+        />
       </mesh>
       <mesh castShadow position={[0, 1.02, 0]}>
         <sphereGeometry args={[0.07, 16, 12]} />
@@ -467,20 +512,36 @@ function RobotModel({
 
       <mesh castShadow position={[-0.4, 0.15, 0]}>
         <boxGeometry args={[0.12, 0.42, 0.14]} />
-        <meshStandardMaterial color={config.secondary} metalness={0.18} roughness={0.32} />
+        <meshStandardMaterial
+          color={config.secondary}
+          metalness={0.18}
+          roughness={0.32}
+        />
       </mesh>
       <mesh castShadow position={[0.4, 0.15, 0]}>
         <boxGeometry args={[0.12, 0.42, 0.14]} />
-        <meshStandardMaterial color={config.secondary} metalness={0.18} roughness={0.32} />
+        <meshStandardMaterial
+          color={config.secondary}
+          metalness={0.18}
+          roughness={0.32}
+        />
       </mesh>
 
       <mesh castShadow position={[-0.18, -0.26, 0.04]}>
         <boxGeometry args={[0.14, 0.24, 0.2]} />
-        <meshStandardMaterial color="#cbd5e1" metalness={0.34} roughness={0.28} />
+        <meshStandardMaterial
+          color="#cbd5e1"
+          metalness={0.34}
+          roughness={0.28}
+        />
       </mesh>
       <mesh castShadow position={[0.18, -0.26, 0.04]}>
         <boxGeometry args={[0.14, 0.24, 0.2]} />
-        <meshStandardMaterial color="#cbd5e1" metalness={0.34} roughness={0.28} />
+        <meshStandardMaterial
+          color="#cbd5e1"
+          metalness={0.34}
+          roughness={0.28}
+        />
       </mesh>
 
       {isDragging ? (
@@ -533,7 +594,9 @@ function RobotArena({
   const dragRef = useRef<DragSession | null>(null);
   const pointerWorldRef = useRef(new Vector3());
   const dragPlane = useMemo(() => new Plane(new Vector3(0, 1, 0), 0), []);
-  const motionsRef = useRef<RobotMotions>(createRobotMotions(getNow(), difficulty));
+  const motionsRef = useRef<RobotMotions>(
+    createRobotMotions(getNow(), difficulty),
+  );
   const flashRef = useRef(createFlashSchedule(getNow(), difficulty));
 
   useEffect(() => {
@@ -628,7 +691,8 @@ function RobotArena({
     targetRef.current = nextTarget;
     setTarget(nextTarget);
     flashRef.current = createFlashSchedule(now, difficultyRef.current);
-    targetVisibleRef.current = difficulties[difficultyRef.current].alwaysVisible;
+    targetVisibleRef.current =
+      difficulties[difficultyRef.current].alwaysVisible;
     setTargetVisible(difficulties[difficultyRef.current].alwaysVisible);
   }, [
     onCapturedCountChange,
@@ -677,7 +741,10 @@ function RobotArena({
             -HALF_DEPTH + ROBOT_RADIUS,
             HALF_DEPTH - ROBOT_RADIUS,
           );
-          const nextYaw = Math.atan2(nextX - currentRobot.x, nextZ - currentRobot.z);
+          const nextYaw = Math.atan2(
+            nextX - currentRobot.x,
+            nextZ - currentRobot.z,
+          );
           const nextStates: RobotStates = {
             ...currentStates,
             [drag.id]: {
@@ -702,7 +769,8 @@ function RobotArena({
     if (!settings.alwaysVisible) {
       if (now >= flashRef.current.nextAt) {
         const visibleUntil =
-          now + randomBetween(settings.flashDuration[0], settings.flashDuration[1]);
+          now +
+          randomBetween(settings.flashDuration[0], settings.flashDuration[1]);
 
         flashRef.current = {
           visibleUntil,
@@ -712,7 +780,8 @@ function RobotArena({
         };
       }
 
-      nextTargetVisible = nextTargetVisible || now < flashRef.current.visibleUntil;
+      nextTargetVisible =
+        nextTargetVisible || now < flashRef.current.visibleUntil;
     }
 
     if (targetVisibleRef.current !== nextTargetVisible) {
@@ -745,8 +814,16 @@ function RobotArena({
 
         let nextX = current.x + motion.vx * delta;
         let nextZ = current.z + motion.vz * delta;
-        const clampedX = clamp(nextX, -HALF_WIDTH + ROBOT_RADIUS, HALF_WIDTH - ROBOT_RADIUS);
-        const clampedZ = clamp(nextZ, -HALF_DEPTH + ROBOT_RADIUS, HALF_DEPTH - ROBOT_RADIUS);
+        const clampedX = clamp(
+          nextX,
+          -HALF_WIDTH + ROBOT_RADIUS,
+          HALF_WIDTH - ROBOT_RADIUS,
+        );
+        const clampedZ = clamp(
+          nextZ,
+          -HALF_DEPTH + ROBOT_RADIUS,
+          HALF_DEPTH - ROBOT_RADIUS,
+        );
 
         if (clampedX !== nextX) {
           motion = {
@@ -790,7 +867,10 @@ function RobotArena({
     });
   });
 
-  function handleRobotPointerDown(id: RobotId, event: ThreeEvent<PointerEvent>) {
+  function handleRobotPointerDown(
+    id: RobotId,
+    event: ThreeEvent<PointerEvent>,
+  ) {
     if (isCompleteRef.current || statesRef.current[id].captured) {
       return;
     }
@@ -830,7 +910,8 @@ function RobotArena({
 
 export default function RobotDragGameV2() {
   const [difficulty, setDifficulty] = useState<Difficulty>("easy");
-  const [robotStates, setRobotStates] = useState<RobotStates>(createRobotStates);
+  const [robotStates, setRobotStates] =
+    useState<RobotStates>(createRobotStates);
   const [target, setTarget] = useState<TargetPoint>(() => createPoint());
   const [targetVisible, setTargetVisible] = useState(true);
   const [draggedId, setDraggedId] = useState<RobotId | null>(null);
