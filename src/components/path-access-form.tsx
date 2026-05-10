@@ -4,6 +4,9 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 
 type PathAccessFormProps = {
   action: (formData: FormData) => void | Promise<void>;
+  errorMessage?: string;
+  initialModalOpen?: boolean;
+  initialPath?: string;
 };
 
 function normalizePath(value: string): string {
@@ -13,11 +16,20 @@ function normalizePath(value: string): string {
   return segments.length === 1 ? segments[0].toLowerCase() : "";
 }
 
-export function PathAccessForm({ action }: PathAccessFormProps) {
-  const [path, setPath] = useState("");
-  const [pendingPath, setPendingPath] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
+export function PathAccessForm({
+  action,
+  errorMessage,
+  initialModalOpen = false,
+  initialPath = "",
+}: PathAccessFormProps) {
+  const normalizedInitialPath = normalizePath(initialPath);
+  const [path, setPath] = useState(normalizedInitialPath);
+  const [pendingPath, setPendingPath] = useState(normalizedInitialPath);
+  const [isModalOpen, setIsModalOpen] = useState(
+    initialModalOpen && normalizedInitialPath.length > 0,
+  );
   const passwordRef = useRef<HTMLInputElement>(null);
+  const shouldShowError = errorMessage && pendingPath === normalizedInitialPath;
 
   useEffect(() => {
     if (isModalOpen) {
@@ -95,6 +107,14 @@ export function PathAccessForm({ action }: PathAccessFormProps) {
               >
                 Enter password
               </label>
+              {shouldShowError ? (
+                <p
+                  className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-700 dark:text-red-300"
+                  role="alert"
+                >
+                  {errorMessage}
+                </p>
+              ) : null}
               <input
                 autoComplete="current-password"
                 className="h-12 min-w-0 rounded-md border border-border bg-background px-4 text-base text-foreground shadow-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/25"

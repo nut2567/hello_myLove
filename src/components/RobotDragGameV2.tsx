@@ -467,7 +467,7 @@ function RobotModel({
       </mesh>
 
       <mesh ref={headRef} castShadow position={[0, 0.54, 0]}>
-        <boxGeometry args={[0.62, 0.42, 0.48]} />
+        <boxGeometry args={[0.22, 0.22, 0.22]} />
         <meshStandardMaterial
           color={config.secondary}
           metalness={0.24}

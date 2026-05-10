@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { auth, signIn } from "@/auth";
 import { PathAccessForm } from "@/components/path-access-form";
@@ -15,7 +15,10 @@ type CatchAllPageProps = {
   params: Promise<{
     slug?: string[];
   }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
+
+const INVALID_PASSWORD_QUERY_VALUE = "invalid";
 
 function readPin(value: FormDataEntryValue | null): string | null {
   if (typeof value !== "string") {
@@ -37,10 +40,16 @@ async function unlockSubmittedPath(formData: FormData) {
     notFound();
   }
 
-  const user = await getPathUserByCredentials({ name, pin });
+  const pathUser = await getPathUserByName(name);
 
-  if (!user) {
+  if (!pathUser) {
     notFound();
+  }
+
+  const credentialUser = await getPathUserByCredentials({ name, pin });
+
+  if (!credentialUser) {
+    redirect(`/${name}?password=${INVALID_PASSWORD_QUERY_VALUE}`);
   }
 
   await signIn("path-access", {
@@ -50,12 +59,116 @@ async function unlockSubmittedPath(formData: FormData) {
   });
 }
 
+function getFirstSearchParam(
+  searchParams: Record<string, string | string[] | undefined>,
+  key: string,
+): string | null {
+  const value = searchParams[key];
+
+  if (Array.isArray(value)) {
+    return value[0] ?? null;
+  }
+
+  return value ?? null;
+}
+
 function getLinkTitle(link: PathLink, index: number): string {
   try {
     return new URL(link.url).hostname.replace(/^www\./, "");
   } catch {
     return `Link ${index + 1}`;
   }
+}
+
+function getYouTubeVideoId(url: URL): string | null {
+  const hostname = url.hostname.replace(/^www\./, "");
+
+  if (hostname === "youtu.be") {
+    return url.pathname.split("/").filter(Boolean)[0] ?? null;
+  }
+
+  if (
+    hostname !== "youtube.com" &&
+    hostname !== "m.youtube.com" &&
+    hostname !== "music.youtube.com"
+  ) {
+    return null;
+  }
+
+  if (url.pathname === "/watch") {
+    return url.searchParams.get("v");
+  }
+
+  const [, route, videoId] = url.pathname.split("/");
+
+  if (route === "embed" || route === "shorts" || route === "live") {
+    return videoId || null;
+  }
+
+  return null;
+}
+
+function parseYouTubeTime(value: string | null): number | null {
+  if (!value) {
+    return null;
+  }
+
+  if (/^\d+$/.test(value)) {
+    return Number(value);
+  }
+
+  const match = value.match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s?)?$/i);
+
+  if (!match) {
+    return null;
+  }
+
+  const [, hours = "0", minutes = "0", seconds = "0"] = match;
+  const total = Number(hours) * 3600 + Number(minutes) * 60 + Number(seconds);
+
+  return total > 0 ? total : null;
+}
+
+function getVideoEmbedUrl(link: PathLink): string | null {
+  try {
+    const url = new URL(link.url);
+    const youtubeVideoId = getYouTubeVideoId(url);
+
+    if (youtubeVideoId) {
+      const embedUrl = new URL(`https://www.youtube.com/embed/${youtubeVideoId}`);
+      const startSeconds =
+        parseYouTubeTime(url.searchParams.get("t")) ??
+        parseYouTubeTime(url.searchParams.get("start"));
+
+      if (startSeconds !== null) {
+        embedUrl.searchParams.set("start", String(startSeconds));
+      }
+
+      return embedUrl.toString();
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function getDirectVideoType(url: string): string | null {
+  const pathname = url.split("?")[0]?.toLowerCase() ?? "";
+
+  if (pathname.endsWith(".mp4")) {
+    return "video/mp4";
+  }
+
+  if (pathname.endsWith(".webm")) {
+    return "video/webm";
+  }
+
+  if (pathname.endsWith(".ogg") || pathname.endsWith(".ogv")) {
+    return "video/ogg";
+  }
+
+  return null;
 }
 
 function PrivatePathContent({ user }: { user: PublicPathUser }) {
@@ -78,34 +191,67 @@ function PrivatePathContent({ user }: { user: PublicPathUser }) {
 
         {user.music.length > 0 ? (
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {user.music.map((link, index) => (
-              <a
-                className="group rounded-lg border border-border bg-surface p-5 shadow-soft transition-colors hover:border-accent/40 hover:bg-muted"
-                href={link.url}
-                key={`${link.url}-${index}`}
-                rel="noreferrer"
-                target="_blank"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-semibold text-accent">
-                      {getLinkTitle(link, index)}
-                    </p>
-                    <h2 className="mt-3 break-all text-lg font-semibold text-foreground">
-                      Open link
-                    </h2>
-                  </div>
-                  {link.rate !== null ? (
-                    <span className="rounded-md border border-accent/25 bg-accent/10 px-2 py-1 text-xs font-semibold text-accent">
-                      {link.rate}/10
-                    </span>
+            {user.music.map((link, index) => {
+              const embedUrl = getVideoEmbedUrl(link);
+              const directVideoType = getDirectVideoType(link.url);
+
+              return (
+                <article
+                  className="overflow-hidden rounded-lg border border-border bg-surface shadow-soft"
+                  key={`${link.url}-${index}`}
+                >
+                  {embedUrl ? (
+                    <div className="aspect-video bg-background">
+                      <iframe
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowFullScreen
+                        className="h-full w-full"
+                        src={embedUrl}
+                        title={`Video ${index + 1}`}
+                      />
+                    </div>
+                  ) : directVideoType ? (
+                    <video className="aspect-video w-full bg-background" controls>
+                      <source src={link.url} type={directVideoType} />
+                      Your browser does not support the video tag.
+                    </video>
                   ) : null}
-                </div>
-                <p className="mt-4 break-all font-mono text-xs leading-5 text-muted-foreground">
-                  {link.url}
-                </p>
-              </a>
-            ))}
+
+                  <div className="p-5">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-semibold text-accent">
+                          {getLinkTitle(link, index)}
+                        </p>
+                        <h2 className="mt-3 break-all text-lg font-semibold text-foreground">
+                          {embedUrl || directVideoType ? "Video" : "Open link"}
+                        </h2>
+                      </div>
+                      {link.rate !== null ? (
+                        <span className="rounded-md border border-accent/25 bg-accent/10 px-2 py-1 text-xs font-semibold text-accent">
+                          {link.rate}/10
+                        </span>
+                      ) : null}
+                    </div>
+
+                    <p className="mt-4 break-all font-mono text-xs leading-5 text-muted-foreground">
+                      {link.url}
+                    </p>
+
+                    {!embedUrl && !directVideoType ? (
+                      <a
+                        className="mt-4 inline-flex h-10 items-center justify-center rounded-md border border-accent bg-accent px-4 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent/90"
+                        href={link.url}
+                        rel="noreferrer"
+                        target="_blank"
+                      >
+                        Open URL
+                      </a>
+                    ) : null}
+                  </div>
+                </article>
+              );
+            })}
           </div>
         ) : (
           <div className="mt-10 rounded-lg border border-border bg-surface p-6 text-muted-foreground shadow-soft">
@@ -117,7 +263,10 @@ function PrivatePathContent({ user }: { user: PublicPathUser }) {
   );
 }
 
-export default async function CatchAllPage({ params }: CatchAllPageProps) {
+export default async function CatchAllPage({
+  params,
+  searchParams,
+}: CatchAllPageProps) {
   const { slug = [] } = await params;
 
   if (slug.length === 0) {
@@ -130,16 +279,33 @@ export default async function CatchAllPage({ params }: CatchAllPageProps) {
     notFound();
   }
 
-  const session = await auth();
-
-  if (session?.user?.pathName !== name) {
-    notFound();
-  }
-
-  const user = await getPathUserByName(name);
+  const [user, session, resolvedSearchParams] = await Promise.all([
+    getPathUserByName(name),
+    auth(),
+    searchParams,
+  ]);
 
   if (!user) {
     notFound();
+  }
+
+  if (session?.user?.pathName !== name) {
+    const hasInvalidPassword =
+      getFirstSearchParam(resolvedSearchParams, "password") ===
+      INVALID_PASSWORD_QUERY_VALUE;
+
+    return (
+      <PathAccessForm
+        action={unlockSubmittedPath}
+        errorMessage={
+          hasInvalidPassword
+            ? "Password is incorrect. Please try again."
+            : undefined
+        }
+        initialModalOpen
+        initialPath={name}
+      />
+    );
   }
 
   return <PrivatePathContent user={user} />;
