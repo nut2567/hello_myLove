@@ -1,13 +1,10 @@
-import { cookies } from "next/headers";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 
+import { auth, signIn } from "@/auth";
 import { PathAccessForm } from "@/components/path-access-form";
 import {
-  createPathAccessToken,
-  getPathAccessCookieName,
   getPathUserByCredentials,
   getPathUserByName,
-  isValidPathAccessToken,
   normalizeSlugPathName,
   normalizeSubmittedPathName,
   type PathLink,
@@ -46,19 +43,11 @@ async function unlockSubmittedPath(formData: FormData) {
     notFound();
   }
 
-  const cookieStore = await cookies();
-
-  cookieStore.set({
-    name: getPathAccessCookieName(name),
-    value: createPathAccessToken(name),
-    httpOnly: true,
-    maxAge: 60 * 60 * 24,
-    path: "/",
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+  await signIn("path-access", {
+    path: name,
+    pin,
+    redirectTo: `/${name}`,
   });
-
-  redirect(`/${name}`);
 }
 
 function getLinkTitle(link: PathLink, index: number): string {
@@ -141,10 +130,9 @@ export default async function CatchAllPage({ params }: CatchAllPageProps) {
     notFound();
   }
 
-  const cookieStore = await cookies();
-  const token = cookieStore.get(getPathAccessCookieName(name))?.value;
+  const session = await auth();
 
-  if (!isValidPathAccessToken({ name, token })) {
+  if (session?.user?.pathName !== name) {
     notFound();
   }
 

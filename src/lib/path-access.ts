@@ -1,12 +1,9 @@
 import "server-only";
 
-import crypto from "node:crypto";
-
 import { getMongoClient } from "@/lib/mongodb";
 
 const DATABASE_NAME = "port";
 const COLLECTION_NAME = "user";
-const ACCESS_COOKIE_PREFIX = "path_access_";
 
 export type PathLink = {
   url: string;
@@ -30,19 +27,6 @@ type PathUserQuery = {
   name: string;
   pin?: string;
 };
-
-function getAccessSecret(): string {
-  const secret =
-    process.env.PATH_ACCESS_SECRET ??
-    process.env.MONGODB_URI ??
-    process.env.nana_technology_MONGODB_URI;
-
-  if (!secret) {
-    throw new Error("PATH_ACCESS_SECRET or MONGODB_URI is not configured.");
-  }
-
-  return secret;
-}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -102,14 +86,18 @@ function normalizePathName(value: string): string | null {
   return name;
 }
 
-export function normalizeSubmittedPathName(
-  value: FormDataEntryValue | null,
-): string | null {
+export function normalizePathNameValue(value: unknown): string | null {
   if (typeof value !== "string") {
     return null;
   }
 
   return normalizePathName(value);
+}
+
+export function normalizeSubmittedPathName(
+  value: FormDataEntryValue | null,
+): string | null {
+  return normalizePathNameValue(value);
 }
 
 export function normalizeSlugPathName(slug: string[]): string | null {
@@ -149,36 +137,4 @@ export async function getPathUserByCredentials({
   pin: string;
 }): Promise<PublicPathUser | null> {
   return findPathUser({ name, pin });
-}
-
-export function getPathAccessCookieName(name: string): string {
-  return `${ACCESS_COOKIE_PREFIX}${name}`;
-}
-
-export function createPathAccessToken(name: string): string {
-  return crypto
-    .createHmac("sha256", getAccessSecret())
-    .update(`path:${name}`)
-    .digest("base64url");
-}
-
-export function isValidPathAccessToken({
-  name,
-  token,
-}: {
-  name: string;
-  token: string | undefined;
-}): boolean {
-  if (!token) {
-    return false;
-  }
-
-  const expected = createPathAccessToken(name);
-  const tokenBuffer = Buffer.from(token);
-  const expectedBuffer = Buffer.from(expected);
-
-  return (
-    tokenBuffer.length === expectedBuffer.length &&
-    crypto.timingSafeEqual(tokenBuffer, expectedBuffer)
-  );
 }

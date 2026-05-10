@@ -92,6 +92,8 @@ function shouldTrackRequest(request: NextRequest): boolean {
     pathname.startsWith("/_next/static") ||
     pathname.startsWith("/_next/image") ||
     pathname.startsWith("/_next/data") ||
+    pathname === "/api/auth" ||
+    pathname.startsWith("/api/auth/") ||
     pathname === "/api/visitor" ||
     pathname.startsWith("/api/visitor/") ||
     ASSET_EXTENSION_PATTERN.test(pathname)
@@ -157,5 +159,5 @@ export function proxy(request: NextRequest, event: NextFetchEvent) {
 
 export const config = {
   matcher:
-    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|api/visitor).*)",
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|api/auth|api/visitor).*)",
 };
