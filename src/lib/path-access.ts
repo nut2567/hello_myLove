@@ -2,7 +2,6 @@ import "server-only";
 
 import { getMongoClient } from "@/lib/mongodb";
 
-const DATABASE_NAME = "port";
 const COLLECTION_NAME = "user";
 
 export type PathLink = {
@@ -27,6 +26,10 @@ type PathUserQuery = {
   name: string;
   pin?: string;
 };
+
+export function getDatabaseName(): string {
+  return process.env.DATABASE_NAME ?? "port";
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -109,7 +112,7 @@ async function findPathUser(
 ): Promise<PublicPathUser | null> {
   const client = await getMongoClient();
   const document = await client
-    .db(DATABASE_NAME)
+    .db(getDatabaseName())
     .collection<PathUserDocument>(COLLECTION_NAME)
     .findOne(query, {
       projection: {
