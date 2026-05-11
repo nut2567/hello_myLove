@@ -23,7 +23,7 @@ import {
   markCheated,
   recordFakeHeartClick,
   recordHeartClick,
-  resetGameOver,
+  resetHeartStatus,
 } from "@/lib/heart-game-store";
 import {
   createHeartId,
@@ -68,7 +68,13 @@ function createFakeHeart(index: number, score: number) {
   };
 }
 
-function createGameOverScoreImage(score: number) {
+type ScoreImageOptions = {
+  label: string;
+  score: number;
+  title: string;
+};
+
+function createScoreImage({ label, score, title }: ScoreImageOptions) {
   const canvas = document.createElement("canvas");
   const pixelRatio = window.devicePixelRatio || 1;
   const width = 520;
@@ -100,7 +106,7 @@ function createGameOverScoreImage(score: number) {
   context.fillStyle = "#fda4af";
   context.font = "900 34px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
   context.textAlign = "center";
-  context.fillText("GAME OVER", width / 2, 96);
+  context.fillText(title, width / 2, 96);
 
   context.fillStyle = "#bef264";
   context.font = "900 82px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
@@ -108,7 +114,7 @@ function createGameOverScoreImage(score: number) {
 
   context.fillStyle = "#67e8f9";
   context.font = "800 24px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
-  context.fillText("FINAL SCORE", width / 2, 246);
+  context.fillText(label, width / 2, 246);
 
   for (let index = 0; index < 11; index += 1) {
     context.fillStyle = index % 2 === 0 ? "#f472b6" : "#22d3ee";
@@ -146,13 +152,34 @@ export function HeartButton({
     { length: Math.floor(score / POINTS_PER_FAKE_HEART) },
     (_, index) => createFakeHeart(index, score),
   );
-  const gameOverScoreImage = useMemo(() => {
-    if (!gameOver || typeof document === "undefined") {
+  const scorePopup = useMemo(() => {
+    if (cheated) {
+      return {
+        fileName: "heart-game-loser-score.png",
+        label: "SCORE RESET",
+        score: 0,
+        title: "LOSER",
+      };
+    }
+
+    if (gameOver) {
+      return {
+        fileName: "heart-game-final-score.png",
+        label: "FINAL SCORE",
+        score: gameOverScore,
+        title: "GAME OVER",
+      };
+    }
+
+    return null;
+  }, [cheated, gameOver, gameOverScore]);
+  const scorePopupImage = useMemo(() => {
+    if (!scorePopup || typeof document === "undefined") {
       return "";
     }
 
-    return createGameOverScoreImage(gameOverScore);
-  }, [gameOver, gameOverScore]);
+    return createScoreImage(scorePopup);
+  }, [scorePopup]);
 
   useEffect(() => {
     if (urlScore === score) {
@@ -188,8 +215,23 @@ export function HeartButton({
     void setUrlScore(0, { history: "replace" });
   }
 
-  function closeGameOver() {
-    dispatch(resetGameOver());
+  function closeScorePopup() {
+    dispatch(resetHeartStatus());
+  }
+
+  function downloadScoreImage() {
+    if (!scorePopup || !scorePopupImage) {
+      return;
+    }
+
+    const link = document.createElement("a");
+
+    link.download = scorePopup.fileName;
+    link.href = scorePopupImage;
+    link.rel = "noopener";
+    document.body.append(link);
+    link.click();
+    link.remove();
   }
 
   const scoreStatus = (
@@ -215,31 +257,40 @@ export function HeartButton({
     <>
       {scoreHeaderSlot ? createPortal(scoreStatus, scoreHeaderSlot) : null}
 
-      {gameOver && gameOverScoreImage
+      {scorePopup && scorePopupImage
         ? createPortal(
             <div
-              aria-label="Game over"
+              aria-label={scorePopup.title}
               aria-modal="true"
               className="fixed inset-0 z-50 grid place-items-center bg-black/70 px-5 backdrop-blur-sm"
               role="dialog"
             >
               <div className="pixel-panel grid max-w-xl gap-4 p-4">
                 <Image
-                  alt="Game over score card"
+                  alt={`${scorePopup.title} score card`}
                   className="w-full max-w-[520px] border-4 border-cyan-300"
                   draggable={false}
                   height={320}
-                  src={gameOverScoreImage}
+                  src={scorePopupImage}
                   unoptimized
                   width={520}
                 />
-                <button
-                  className="pixel-chip px-4 py-3 text-sm font-black uppercase text-lime-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-200"
-                  onClick={closeGameOver}
-                  type="button"
-                >
-                  Play again
-                </button>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <button
+                    className="pixel-chip px-4 py-3 text-sm font-black uppercase text-cyan-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-200"
+                    onClick={downloadScoreImage}
+                    type="button"
+                  >
+                    Download image
+                  </button>
+                  <button
+                    className="pixel-chip px-4 py-3 text-sm font-black uppercase text-lime-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-200"
+                    onClick={closeScorePopup}
+                    type="button"
+                  >
+                    Play again
+                  </button>
+                </div>
               </div>
             </div>,
             document.body,

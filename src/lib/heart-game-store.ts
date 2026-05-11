@@ -24,7 +24,8 @@ const heartGameSlice = createSlice({
       state.gameOverScore = 0;
       state.score = 0;
     },
-    resetGameOver(state) {
+    resetHeartStatus(state) {
+      state.cheated = false;
       state.gameOver = false;
       state.gameOverScore = 0;
     },
@@ -47,7 +48,7 @@ export const {
   markCheated,
   recordFakeHeartClick,
   recordHeartClick,
-  resetGameOver,
+  resetHeartStatus,
 } = heartGameSlice.actions;
 
 export function makeHeartGameStore() {
