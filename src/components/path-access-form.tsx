@@ -54,7 +54,7 @@ export function PathAccessForm({
     <div className="flex flex-1 items-center justify-center px-6 py-12">
       <form className="grid w-full max-w-lg gap-4" onSubmit={handlePathSubmit}>
         <label
-          className="text-sm font-medium leading-6 text-foreground"
+          className="text-xl font-medium leading-6 text-foreground"
           htmlFor="path"
         >
           Enter your name เพื่อไปยังหน้าเฉพาะของคุณที่เข้าถึงได้
