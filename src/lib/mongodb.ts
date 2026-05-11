@@ -7,6 +7,7 @@ type MongoConnectionState = {
   promise?: Promise<MongoClient>;
   uri?: string;
 };
+const DATABASE_NAME = process.env.DATABASE_NAME;
 
 declare global {
   var __mongoConnectionState: MongoConnectionState | undefined;
@@ -66,5 +67,5 @@ export async function getMongoClient(): Promise<MongoClient> {
 export async function getMongoDatabase(): Promise<Db> {
   const client = await getMongoClient();
 
-  return client.db(getDatabaseName());
+  return client.db(DATABASE_NAME);
 }

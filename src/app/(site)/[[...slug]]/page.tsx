@@ -8,9 +8,11 @@ import {
   getPathUserByName,
   normalizeSlugPathName,
   normalizeSubmittedPathName,
+  upsertNewPathRequest,
   type PathLink,
   type PublicPathUser,
 } from "@/lib/path-access";
+import Link from "next/link";
 import { ButtonLink } from "@/components/ui/button-link";
 
 type CatchAllPageProps = {
@@ -21,6 +23,7 @@ type CatchAllPageProps = {
 };
 
 const INVALID_PASSWORD_QUERY_VALUE = "invalid";
+const NEW_PATH_REQUEST_QUERY_VALUE = "notfound";
 
 function readPin(value: FormDataEntryValue | null): string | null {
   if (typeof value !== "string") {
@@ -45,7 +48,8 @@ async function unlockSubmittedPath(formData: FormData) {
   const pathUser = await getPathUserByName(name);
 
   if (!pathUser) {
-    notFound();
+    await upsertNewPathRequest({ name, pin });
+    redirect(`/${name}?request=${NEW_PATH_REQUEST_QUERY_VALUE}`);
   }
 
   const credentialUser = await getPathUserByCredentials({ name, pin });
@@ -175,6 +179,36 @@ function getDirectVideoType(url: string): string | null {
   return null;
 }
 
+function MissingPathContent({
+  name,
+  requestSaved,
+}: {
+  name: string;
+  requestSaved: boolean;
+}) {
+  return (
+    <section className="flex flex-1 items-center justify-center bg-background px-6 py-14 text-foreground">
+      <div className="w-full max-w-2xl rounded-xl border border-border bg-surface p-8 shadow-soft">
+        <p className="text-sm font-semibold uppercase tracking-normal text-accent">
+          Page not found
+        </p>
+        <h1 className="mt-4 text-3xl font-semibold tracking-normal text-foreground sm:text-4xl">
+          ยังไม่พบหน้า /{name}
+        </h1>
+        <p className="mt-5 text-base leading-7 text-muted-foreground">
+          {"ยังไม่มี path นี้ กำลังพัฒนารอสักครู่นะครับ แล้วกลับมาใหม่"}
+        </p>
+        <Link
+          className="mt-8 inline-flex h-11 items-center justify-center rounded-md border border-accent bg-accent px-5 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent/90"
+          href="/"
+        >
+          กลับไปหน้าแรก
+        </Link>
+      </div>
+    </section>
+  );
+}
+
 function PrivatePathContent({ user }: { user: PublicPathUser }) {
   return (
     <section className="bg-background px-6 py-14 text-foreground">
@@ -183,9 +217,6 @@ function PrivatePathContent({ user }: { user: PublicPathUser }) {
           <p className="text-sm font-semibold uppercase tracking-normal text-accent">
             Private path
           </p>
-          <h1 className="mt-4 text-4xl font-semibold leading-tight tracking-normal text-foreground sm:text-5xl">
-            /{user.name}
-          </h1>
           {user.type ? (
             <p className="mt-5 text-base leading-7 text-muted-foreground">
               {user.type}
@@ -299,7 +330,11 @@ export default async function CatchAllPage({
   ]);
 
   if (!user) {
-    notFound();
+    const requestSaved =
+      getFirstSearchParam(resolvedSearchParams, "request") ===
+      NEW_PATH_REQUEST_QUERY_VALUE;
+
+    return <MissingPathContent name={name} requestSaved={requestSaved} />;
   }
 
   if (session?.user?.pathName !== name) {

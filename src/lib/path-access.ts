@@ -2,7 +2,8 @@ import "server-only";
 
 import { getMongoClient } from "@/lib/mongodb";
 
-const COLLECTION_NAME = "user";
+const USER_COLLECTION_NAME = "user";
+const NEW_USER_COLLECTION_NAME = "newUser";
 
 export type PathLink = {
   url: string;
@@ -30,6 +31,12 @@ type PathUserQuery = {
 export function getDatabaseName(): string {
   return process.env.DATABASE_NAME ?? "port";
 }
+type NewPathRequestDocument = {
+  path: string;
+  pin: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -113,7 +120,7 @@ async function findPathUser(
   const client = await getMongoClient();
   const document = await client
     .db(getDatabaseName())
-    .collection<PathUserDocument>(COLLECTION_NAME)
+    .collection<PathUserDocument>(USER_COLLECTION_NAME)
     .findOne(query, {
       projection: {
         _id: 0,
@@ -140,4 +147,33 @@ export async function getPathUserByCredentials({
   pin: string;
 }): Promise<PublicPathUser | null> {
   return findPathUser({ name, pin });
+}
+
+export async function upsertNewPathRequest({
+  name,
+  pin,
+}: {
+  name: string;
+  pin: string;
+}): Promise<void> {
+  const client = await getMongoClient();
+  const now = new Date();
+
+  await client
+    .db(getDatabaseName())
+    .collection<NewPathRequestDocument>(NEW_USER_COLLECTION_NAME)
+    .updateOne(
+      { path: name },
+      {
+        $set: {
+          pin,
+          updatedAt: now,
+        },
+        $setOnInsert: {
+          path: name,
+          createdAt: now,
+        },
+      },
+      { upsert: true },
+    );
 }

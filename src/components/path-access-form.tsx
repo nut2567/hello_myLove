@@ -105,7 +105,8 @@ export function PathAccessForm({
                 className="text-sm font-medium leading-6 text-foreground"
                 htmlFor="pin"
               >
-                Enter password
+                Enter password ที่คุณแจ้งกับกระผมไว้ หรือ วันเกิด เช่น
+                01/01/2000 เพื่อปลดล็อคการเข้าถึงหน้านี้
               </label>
               {shouldShowError ? (
                 <p
