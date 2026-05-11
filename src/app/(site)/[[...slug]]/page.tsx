@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { auth, signIn } from "@/auth";
 import { PathAccessForm } from "@/components/path-access-form";
+import { WelcomePixelModal } from "@/components/welcome-pixel-modal";
 import {
   getPathUserByCredentials,
   getPathUserByName,
@@ -10,6 +11,7 @@ import {
   type PathLink,
   type PublicPathUser,
 } from "@/lib/path-access";
+import { ButtonLink } from "@/components/ui/button-link";
 
 type CatchAllPageProps = {
   params: Promise<{
@@ -135,7 +137,9 @@ function getVideoEmbedUrl(link: PathLink): string | null {
     const youtubeVideoId = getYouTubeVideoId(url);
 
     if (youtubeVideoId) {
-      const embedUrl = new URL(`https://www.youtube.com/embed/${youtubeVideoId}`);
+      const embedUrl = new URL(
+        `https://www.youtube.com/embed/${youtubeVideoId}`,
+      );
       const startSeconds =
         parseYouTubeTime(url.searchParams.get("t")) ??
         parseYouTubeTime(url.searchParams.get("start"));
@@ -211,7 +215,10 @@ function PrivatePathContent({ user }: { user: PublicPathUser }) {
                       />
                     </div>
                   ) : directVideoType ? (
-                    <video className="aspect-video w-full bg-background" controls>
+                    <video
+                      className="aspect-video w-full bg-background"
+                      controls
+                    >
                       <source src={link.url} type={directVideoType} />
                       Your browser does not support the video tag.
                     </video>
@@ -239,14 +246,15 @@ function PrivatePathContent({ user }: { user: PublicPathUser }) {
                     </p>
 
                     {!embedUrl && !directVideoType ? (
-                      <a
-                        className="mt-4 inline-flex h-10 items-center justify-center rounded-md border border-accent bg-accent px-4 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent/90"
+                      <ButtonLink
+                        // className="mt-4 inline-flex h-10 items-center justify-center rounded-md border border-accent bg-accent px-4 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent/90"
                         href={link.url}
                         rel="noreferrer"
                         target="_blank"
+                        external
                       >
                         Open URL
-                      </a>
+                      </ButtonLink>
                     ) : null}
                   </div>
                 </article>
@@ -270,7 +278,12 @@ export default async function CatchAllPage({
   const { slug = [] } = await params;
 
   if (slug.length === 0) {
-    return <PathAccessForm action={unlockSubmittedPath} />;
+    return (
+      <>
+        <WelcomePixelModal />
+        <PathAccessForm action={unlockSubmittedPath} />
+      </>
+    );
   }
 
   const name = normalizeSlugPathName(slug);

@@ -57,7 +57,7 @@ export function PathAccessForm({
           className="text-sm font-medium leading-6 text-foreground"
           htmlFor="path"
         >
-          Enter your private path
+          Enter your name เพื่อไปยังหน้าเฉพาะของคุณที่เข้าถึงได้
         </label>
         <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
           <input
@@ -68,7 +68,7 @@ export function PathAccessForm({
             inputMode="url"
             name="path"
             onChange={(event) => setPath(event.target.value)}
-            placeholder="Example /mint"
+            placeholder="Example /nut"
             required
             spellCheck={false}
             type="text"

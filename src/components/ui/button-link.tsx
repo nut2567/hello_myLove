@@ -7,21 +7,22 @@ type BaseButtonLinkProps = {
   variant?: "primary" | "secondary";
 };
 
-type ExternalButtonLinkProps = BaseButtonLinkProps & {
-  external: true;
-  href: string;
-};
-
 type InternalButtonLinkProps = BaseButtonLinkProps & {
   external?: false;
   href: Route;
 };
 
-type ButtonLinkProps = ExternalButtonLinkProps | InternalButtonLinkProps;
+type ExternalButtonLinkProps = BaseButtonLinkProps & {
+  external: true;
+  href: string;
+  rel?: string;
+  target?: string;
+};
+
+type ButtonLinkProps = InternalButtonLinkProps | ExternalButtonLinkProps;
 
 const variants = {
-  primary:
-    "border-accent bg-accent text-accent-foreground hover:bg-accent/90",
+  primary: "border-accent bg-accent text-accent-foreground hover:bg-accent/90",
   secondary:
     "border-border bg-surface text-foreground hover:border-accent/40 hover:bg-muted",
 };
@@ -32,7 +33,12 @@ export function ButtonLink(props: ButtonLinkProps) {
 
   if (props.external) {
     return (
-      <a className={className} href={props.href} rel="noreferrer" target="_blank">
+      <a
+        className={className}
+        href={props.href}
+        rel={props.rel}
+        target={props.target}
+      >
         {children}
       </a>
     );
