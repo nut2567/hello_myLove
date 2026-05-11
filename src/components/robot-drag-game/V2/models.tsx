@@ -5,7 +5,10 @@ import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
 import { MathUtils, type Group, type Mesh } from "three";
 
-import { ROBOT_MODEL_SCALE } from "@/components/robot-drag-game/V2/robotConfigs";
+import {
+  DINOSAUR_MODEL_SCALE,
+  ROBOT_MODEL_SCALE,
+} from "@/components/robot-drag-game/V2/robotConfigs";
 import type {
   DinosaurState,
   ModelPointerDown,
@@ -84,8 +87,8 @@ export function RobotModel({
 
     const elapsed = clock.elapsedTime + config.phase;
     const targetY = state.captured
-      ? 0.58 + Math.sin(elapsed * 2.1) * 0.06
-      : 0.38 + Math.sin(elapsed * 5.4) * (isDragging ? 0.03 : 0.015);
+      ? 0.28 + Math.sin(elapsed * 2.1) * 0.035
+      : 0.16 + Math.sin(elapsed * 5.4) * (isDragging ? 0.02 : 0.01);
     const targetScale =
       ROBOT_MODEL_SCALE * (state.captured ? 0.82 : isDragging ? 1.16 : 1);
 
@@ -102,11 +105,15 @@ export function RobotModel({
     }
   });
 
+  if (state.removed) {
+    return null;
+  }
+
   return (
     <group
       ref={groupRef}
       onPointerDown={state.captured ? undefined : onPointerDown}
-      position={[state.x, 0.38, state.z]}
+      position={[state.x, 0.16, state.z]}
       rotation={[0, state.yaw, 0]}
       scale={[ROBOT_MODEL_SCALE, ROBOT_MODEL_SCALE, ROBOT_MODEL_SCALE]}
     >
@@ -233,7 +240,9 @@ export function DinosaurModel({
     const elapsed = clock.elapsedTime;
     const targetY =
       0.32 + Math.sin(elapsed * 3.2) * (isDragging ? 0.035 : 0.018);
-    const targetScale = isDragging ? 0.86 : 0.76;
+    const targetScale = isDragging
+      ? DINOSAUR_MODEL_SCALE * 1.13
+      : DINOSAUR_MODEL_SCALE;
 
     group.position.x = MathUtils.lerp(group.position.x, state.x, delta * 14);
     group.position.y = MathUtils.lerp(group.position.y, targetY, delta * 9);
@@ -254,7 +263,7 @@ export function DinosaurModel({
       onPointerDown={onPointerDown}
       position={[state.x, 0.32, state.z]}
       rotation={[0, state.yaw, 0]}
-      scale={[0.76, 0.76, 0.76]}
+      scale={[DINOSAUR_MODEL_SCALE, DINOSAUR_MODEL_SCALE, DINOSAUR_MODEL_SCALE]}
     >
       <mesh castShadow position={[0, 0.22, 0]} scale={[1.35, 0.72, 0.55]}>
         <sphereGeometry args={[0.42, 28, 18]} />

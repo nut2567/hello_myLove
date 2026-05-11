@@ -1,4 +1,5 @@
 import type {
+  DinosaurId,
   Difficulty,
   DifficultySettings,
   RobotConfig,
@@ -9,10 +10,13 @@ export const ARENA_WIDTH = 10;
 export const ARENA_DEPTH = 10;
 export const HALF_WIDTH = ARENA_WIDTH / 2;
 export const HALF_DEPTH = ARENA_DEPTH / 2;
-export const ROBOT_RADIUS = 0.42;
 export const DINOSAUR_RADIUS = 0.46;
-export const ROBOT_MODEL_SCALE = 0.62;
+export const ROBOT_RADIUS = DINOSAUR_RADIUS / 3;
+export const DINOSAUR_MODEL_SCALE = 0.76;
+export const ROBOT_MODEL_SCALE = DINOSAUR_MODEL_SCALE / 3;
 export const ROBOT_COUNT = 5;
+
+export const dinosaurIds: DinosaurId[] = ["rex", "nova"];
 
 export const robotConfigs: RobotConfig[] = [
   {

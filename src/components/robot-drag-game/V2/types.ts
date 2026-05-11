@@ -1,6 +1,7 @@
 import type { ThreeEvent } from "@react-three/fiber";
 
 export type RobotId = "bolt" | "chip" | "byte" | "nix" | "pixel";
+export type DinosaurId = "rex" | "nova";
 export type Difficulty = "easy" | "medium" | "hard";
 
 export type RobotConfig = {
@@ -17,6 +18,7 @@ export type RobotState = {
   z: number;
   yaw: number;
   captured: boolean;
+  removed: boolean;
 };
 
 export type RobotStates = Record<RobotId, RobotState>;
@@ -39,6 +41,17 @@ export type DinosaurState = TargetPoint & {
   yaw: number;
 };
 
+export type DinosaurStates = Record<DinosaurId, DinosaurState>;
+
+export type DinosaurMotion = {
+  vx: number;
+  vz: number;
+  changeAt: number;
+  pauseUntil: number;
+};
+
+export type DinosaurMotions = Record<DinosaurId, DinosaurMotion>;
+
 export type DragSession =
   | {
       kind: "robot";
@@ -48,6 +61,7 @@ export type DragSession =
     }
   | {
       kind: "dinosaur";
+      id: DinosaurId;
       offsetX: number;
       offsetZ: number;
     };
