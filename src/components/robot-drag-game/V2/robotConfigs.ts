@@ -5,8 +5,8 @@ import type {
   TargetPoint,
 } from "@/components/robot-drag-game/V2/types";
 
-export const ARENA_WIDTH = 9.6;
-export const ARENA_DEPTH = 6.2;
+export const ARENA_WIDTH = 10;
+export const ARENA_DEPTH = 10;
 export const HALF_WIDTH = ARENA_WIDTH / 2;
 export const HALF_DEPTH = ARENA_DEPTH / 2;
 export const ROBOT_RADIUS = 0.42;

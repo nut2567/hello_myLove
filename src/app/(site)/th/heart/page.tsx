@@ -1,9 +1,9 @@
-import { HeartButton } from "../../../../components/ui/heart-button";
+import { redirect } from "next/navigation";
+
+import { createHeartRoute } from "@/lib/heart-id";
+
+export const dynamic = "force-dynamic";
 
 export default function HeartPage() {
-  return (
-    <div className="flex flex-1 items-center justify-center">
-      <HeartButton aria-label="Generate random heart" />
-    </div>
-  );
+  redirect(createHeartRoute());
 }

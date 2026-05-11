@@ -52,11 +52,24 @@ body {
   background:
     linear-gradient(rgb(103 232 249 / 0.08) 2px, transparent 2px),
     linear-gradient(90deg, rgb(103 232 249 / 0.08) 2px, transparent 2px),
-    radial-gradient(circle at 18% 20%, rgb(34 197 94 / 0.18), transparent 26rem),
-    radial-gradient(circle at 82% 10%, rgb(240 171 252 / 0.12), transparent 24rem),
+    radial-gradient(
+      circle at 18% 20%,
+      rgb(34 197 94 / 0.18),
+      transparent 26rem
+    ),
+    radial-gradient(
+      circle at 82% 10%,
+      rgb(240 171 252 / 0.12),
+      transparent 24rem
+    ),
     var(--background);
   background-attachment: fixed;
-  background-size: 32px 32px, 32px 32px, auto, auto, auto;
+  background-size:
+    32px 32px,
+    32px 32px,
+    auto,
+    auto,
+    auto;
   color: var(--foreground);
   font-family: var(--font-geist-mono), "Courier New", monospace;
   letter-spacing: 0;
@@ -72,7 +85,6 @@ body {
 .pixel-shell-bar {
   border-color: var(--border);
   border-style: solid;
-  background: rgb(2 6 23 / 0.94);
   box-shadow: 0 6px 0 var(--pixel-shadow);
 }
 
@@ -80,16 +92,16 @@ body {
   position: sticky;
   top: 0;
   z-index: 50;
-  background: rgb(2 6 23 / 0.72);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  isolation: isolate;
 }
 
 .pixel-shell-link {
   color: var(--foreground);
   font-weight: 900;
   text-transform: uppercase;
-  transition: color 160ms steps(2, end), background-color 160ms steps(2, end);
+  transition:
+    color 160ms steps(2, end),
+    background-color 160ms steps(2, end);
 }
 
 .pixel-shell-link:hover {

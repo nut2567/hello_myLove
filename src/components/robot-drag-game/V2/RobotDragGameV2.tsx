@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  ContactShadows,
-  Environment,
-  OrbitControls,
-} from "@react-three/drei";
+import { ContactShadows, Environment, OrbitControls } from "@react-three/drei";
 import {
   Canvas,
   type ThreeEvent,
@@ -644,8 +640,8 @@ export default function RobotDragGameV2() {
         <spotLight
           angle={0.48}
           color="#a5f3fc"
-          intensity={14}
-          penumbra={0.55}
+          intensity={140}
+          penumbra={2.55}
           position={[-3.8, 6, -4.2]}
         />
         <Suspense fallback={null}>
