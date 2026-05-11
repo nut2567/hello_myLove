@@ -65,19 +65,19 @@ const routes = [
 
 const robotGameFiles = [
   {
-    file: "src/components/RobotDragGame.tsx",
+    file: "src/components/robot-drag-game/RobotDragGame.tsx",
     role: "ตัวเลือกเวอร์ชัน",
     detail:
       "เป็น wrapper ที่ให้สลับ `v1` และ `v2` จากปุ่มมุมขวาล่าง โดย default เปิด `v2`",
   },
   {
-    file: "src/components/RobotDragGameV1.tsx",
+    file: "src/components/robot-drag-game/V1/RobotDragGameV1.tsx",
     role: "เวอร์ชันเดิม",
     detail:
       "เกม 2D แบบ pixel robot ใช้ DOM, pointer event, difficulty และเป้าหมายแบบกระพริบ",
   },
   {
-    file: "src/components/RobotDragGameV2.tsx",
+    file: "src/components/robot-drag-game/V2/RobotDragGameV2.tsx",
     role: "เวอร์ชันล่าสุด",
     detail:
       "เกม 3D ด้วย React Three Fiber มี arena, หุ่นยนต์ 3D, target beacon, drag บนฉาก WebGL และ OrbitControls",
@@ -438,8 +438,12 @@ const workspaceTree = `src/
     layout.tsx
   components/
     RobotDragGame.tsx
-    RobotDragGameV1.tsx
-    RobotDragGameV2.tsx
+    PixelRobot.tsx
+    robot-drag-game/
+      RobotDragGame.tsx
+      V1/RobotDragGameV1.tsx
+      V1/PixelRobot.tsx
+      V2/RobotDragGameV2.tsx
     ShipScene.tsx
     layout/site-shell.tsx
     ui/
@@ -728,7 +732,7 @@ export default function StructurePage() {
               title="ถ้าจะแก้ตัวโมเดล ต้องแก้ฟังก์ชันไหน"
             >
               จุดหลักคือ <InlineCode>function RobotModel</InlineCode> ในไฟล์{" "}
-              <InlineCode>src/components/RobotDragGameV2.tsx</InlineCode>{" "}
+              <InlineCode>src/components/robot-drag-game/V2/RobotDragGameV2.tsx</InlineCode>{" "}
               เพราะฟังก์ชันนี้เป็นคนวาดชิ้นส่วนหุ่นยนต์ 3D ทั้งหมด ส่วน{" "}
               <InlineCode>RobotArena</InlineCode> มีหน้าที่คุมเกมและส่ง state
               เข้ามาให้โมเดลแสดงผล.

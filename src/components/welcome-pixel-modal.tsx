@@ -3,8 +3,7 @@
 import Link from "next/link";
 import type { Route } from "next";
 import { useEffect, useRef, useState } from "react";
-
-import { PixelRobot } from "@/components/PixelRobot";
+import { PixelRobot } from "./robot-drag-game/V1/PixelRobot";
 
 const pathChips = [
   "/th/structure",

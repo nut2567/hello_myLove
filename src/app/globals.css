@@ -76,6 +76,15 @@ body {
   box-shadow: 0 6px 0 var(--pixel-shadow);
 }
 
+.pixel-shell-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgb(2 6 23 / 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
 .pixel-shell-link {
   color: var(--foreground);
   font-weight: 900;
