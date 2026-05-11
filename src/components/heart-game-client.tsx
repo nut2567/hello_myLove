@@ -7,13 +7,13 @@ import { HeartButton } from "@/components/ui/heart-button";
 
 type HeartGameClientProps = {
   className?: string;
-  nextHeartId: number;
+  currentHeartId: string;
   style?: CSSProperties;
 };
 
 export function HeartGameClient({
   className,
-  nextHeartId,
+  currentHeartId,
   style,
 }: HeartGameClientProps) {
   return (
@@ -21,7 +21,7 @@ export function HeartGameClient({
       <HeartButton
         aria-label="Generate another random heart"
         className={className}
-        nextHeartId={nextHeartId}
+        currentHeartId={currentHeartId}
         style={style}
       />
     </NuqsAdapter>

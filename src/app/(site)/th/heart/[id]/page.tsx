@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import { HeartGameClient } from "@/components/heart-game-client";
 import { notFound } from "next/navigation";
 import {
-  createHeartId,
   getHeartPosition,
   isHeartId,
 } from "@/lib/heart-id";
@@ -25,7 +24,6 @@ export default async function HeartIdPage({ params }: HeartIdPageProps) {
   const { id } = await params;
   const heartId = validateHeartId(id);
   const position = getHeartPosition(heartId);
-  const nextHeartId = createHeartId(heartId);
 
   return (
     <main className="relative flex flex-1 overflow-hidden">
@@ -41,7 +39,7 @@ export default async function HeartIdPage({ params }: HeartIdPageProps) {
         <HeartGameClient
           key={heartId}
           className="absolute -translate-x-1/2 -translate-y-1/2"
-          nextHeartId={nextHeartId}
+          currentHeartId={heartId}
           style={position}
         />
       </Suspense>

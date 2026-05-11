@@ -1,8 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   useEffect,
+  useMemo,
   useRef,
   useSyncExternalStore,
   type CSSProperties,
@@ -21,13 +23,18 @@ import {
   markCheated,
   recordFakeHeartClick,
   recordHeartClick,
+  resetGameOver,
 } from "@/lib/heart-game-store";
-import { createHeartRoute, getHeartPosition } from "@/lib/heart-id";
+import {
+  createHeartId,
+  createHeartRoute,
+  getHeartPosition,
+} from "@/lib/heart-id";
 
 type HeartButtonProps = {
   "aria-label": string;
   className?: string;
-  nextHeartId: number;
+  currentHeartId: string;
   style?: CSSProperties;
 };
 
@@ -61,10 +68,60 @@ function createFakeHeart(index: number, score: number) {
   };
 }
 
+function createGameOverScoreImage(score: number) {
+  const canvas = document.createElement("canvas");
+  const pixelRatio = window.devicePixelRatio || 1;
+  const width = 520;
+  const height = 320;
+  const context = canvas.getContext("2d");
+
+  canvas.width = width * pixelRatio;
+  canvas.height = height * pixelRatio;
+  canvas.style.width = `${width}px`;
+  canvas.style.height = `${height}px`;
+
+  if (!context) {
+    return "";
+  }
+
+  context.scale(pixelRatio, pixelRatio);
+  context.imageSmoothingEnabled = false;
+  context.fillStyle = "#080812";
+  context.fillRect(0, 0, width, height);
+  context.fillStyle = "#111827";
+  context.fillRect(18, 18, width - 36, height - 36);
+  context.strokeStyle = "#67e8f9";
+  context.lineWidth = 8;
+  context.strokeRect(24, 24, width - 48, height - 48);
+  context.strokeStyle = "#f472b6";
+  context.lineWidth = 4;
+  context.strokeRect(44, 44, width - 88, height - 88);
+
+  context.fillStyle = "#fda4af";
+  context.font = "900 34px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
+  context.textAlign = "center";
+  context.fillText("GAME OVER", width / 2, 96);
+
+  context.fillStyle = "#bef264";
+  context.font = "900 82px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
+  context.fillText(String(score), width / 2, 198);
+
+  context.fillStyle = "#67e8f9";
+  context.font = "800 24px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
+  context.fillText("FINAL SCORE", width / 2, 246);
+
+  for (let index = 0; index < 11; index += 1) {
+    context.fillStyle = index % 2 === 0 ? "#f472b6" : "#22d3ee";
+    context.fillRect(52 + index * 40, 276, 18, 18);
+  }
+
+  return canvas.toDataURL("image/png");
+}
+
 export function HeartButton({
   "aria-label": ariaLabel,
   className = "",
-  nextHeartId,
+  currentHeartId,
   style,
 }: HeartButtonProps) {
   const router = useRouter();
@@ -72,6 +129,9 @@ export function HeartButton({
   const score = useHeartGameSelector((state) => state.heartGame.score);
   const cheated = useHeartGameSelector((state) => state.heartGame.cheated);
   const gameOver = useHeartGameSelector((state) => state.heartGame.gameOver);
+  const gameOverScore = useHeartGameSelector(
+    (state) => state.heartGame.gameOverScore,
+  );
   const [urlScore, setUrlScore] = useQueryState(
     "score",
     parseAsInteger.withDefault(0),
@@ -86,6 +146,13 @@ export function HeartButton({
     { length: Math.floor(score / POINTS_PER_FAKE_HEART) },
     (_, index) => createFakeHeart(index, score),
   );
+  const gameOverScoreImage = useMemo(() => {
+    if (!gameOver || typeof document === "undefined") {
+      return "";
+    }
+
+    return createGameOverScoreImage(gameOverScore);
+  }, [gameOver, gameOverScore]);
 
   useEffect(() => {
     if (urlScore === score) {
@@ -104,6 +171,7 @@ export function HeartButton({
 
   function goToRandomHeart() {
     const nextScore = score + 1;
+    const nextHeartId = createHeartId(currentHeartId);
     const previousTrustedScores = trustedUrlScoresRef.current;
 
     trustedUrlScoresRef.current = new Set([
@@ -111,7 +179,6 @@ export function HeartButton({
       nextScore,
     ]);
     dispatch(recordHeartClick());
-    void setUrlScore(nextScore, { history: "replace" });
     router.push(createHeartRoute(nextHeartId, nextScore), { scroll: false });
   }
 
@@ -119,6 +186,10 @@ export function HeartButton({
     trustedUrlScoresRef.current = new Set([0, urlScore]);
     dispatch(recordFakeHeartClick());
     void setUrlScore(0, { history: "replace" });
+  }
+
+  function closeGameOver() {
+    dispatch(resetGameOver());
   }
 
   const scoreStatus = (
@@ -144,10 +215,45 @@ export function HeartButton({
     <>
       {scoreHeaderSlot ? createPortal(scoreStatus, scoreHeaderSlot) : null}
 
+      {gameOver && gameOverScoreImage
+        ? createPortal(
+            <div
+              aria-label="Game over"
+              aria-modal="true"
+              className="fixed inset-0 z-50 grid place-items-center bg-black/70 px-5 backdrop-blur-sm"
+              role="dialog"
+            >
+              <div className="pixel-panel grid max-w-xl gap-4 p-4">
+                <Image
+                  alt="Game over score card"
+                  className="w-full max-w-[520px] border-4 border-cyan-300"
+                  draggable={false}
+                  height={320}
+                  src={gameOverScoreImage}
+                  unoptimized
+                  width={520}
+                />
+                <button
+                  className="pixel-chip px-4 py-3 text-sm font-black uppercase text-lime-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-200"
+                  onClick={closeGameOver}
+                  type="button"
+                >
+                  Play again
+                </button>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
+
       {fakeHearts.map((fakeHeart, index) => (
         <motion.button
           animate={{
             opacity: [0.55, 0.9, 0.55],
+            rotate: [-fakeHeart.rotate, fakeHeart.rotate, -fakeHeart.rotate],
+            scale: [0.78, 1.04, 0.78],
+            x: [0, fakeHeart.driftX, 0],
+            y: [0, fakeHeart.driftY, 0],
           }}
           aria-label="Fake heart game over"
           className="absolute z-10 inline-flex size-20 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center text-red-400/80 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
@@ -162,6 +268,8 @@ export function HeartButton({
             repeat: Infinity,
           }}
           type="button"
+          whileHover={{ scale: 1.15 }}
+          whileTap={{ scale: 0.72 }}
         >
           <IoMdHeart aria-hidden className="size-16" />
         </motion.button>
