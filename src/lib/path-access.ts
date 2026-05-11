@@ -35,7 +35,11 @@ type NewPathRequestDocument = {
   path: string;
   pin: string;
   createdAt: Date;
+  createdAtThai: string;
+  lastPinChangedAtThai: string | null;
+  pinChangeCount: number;
   updatedAt: Date;
+  updatedAtThai: string;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -114,6 +118,19 @@ export function normalizeSlugPathName(slug: string[]): string | null {
   return normalizePathName(slug.join("/"));
 }
 
+function formatThaiDateTimeString(date: Date): string {
+  return new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Asia/Bangkok",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).format(date);
+}
+
 async function findPathUser(
   query: PathUserQuery,
 ): Promise<PublicPathUser | null> {
@@ -158,22 +175,45 @@ export async function upsertNewPathRequest({
 }): Promise<void> {
   const client = await getMongoClient();
   const now = new Date();
+  const nowThai = formatThaiDateTimeString(now);
+  const pinChangedExpression = {
+    $and: [
+      { $ne: [{ $type: "$pin" }, "missing"] },
+      { $ne: ["$pin", pin] },
+    ],
+  };
 
   await client
     .db(getDatabaseName())
     .collection<NewPathRequestDocument>(NEW_USER_COLLECTION_NAME)
     .updateOne(
       { path: name },
-      {
-        $set: {
-          pin,
-          updatedAt: now,
+      [
+        {
+          $set: {
+            path: name,
+            pin,
+            createdAt: { $ifNull: ["$createdAt", now] },
+            createdAtThai: { $ifNull: ["$createdAtThai", nowThai] },
+            pinChangeCount: {
+              $cond: [
+                pinChangedExpression,
+                { $add: [{ $ifNull: ["$pinChangeCount", 0] }, 1] },
+                { $ifNull: ["$pinChangeCount", 0] },
+              ],
+            },
+            lastPinChangedAtThai: {
+              $cond: [
+                pinChangedExpression,
+                nowThai,
+                { $ifNull: ["$lastPinChangedAtThai", null] },
+              ],
+            },
+            updatedAt: now,
+            updatedAtThai: nowThai,
+          },
         },
-        $setOnInsert: {
-          path: name,
-          createdAt: now,
-        },
-      },
+      ],
       { upsert: true },
     );
 }
