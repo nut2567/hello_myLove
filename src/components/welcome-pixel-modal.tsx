@@ -45,7 +45,7 @@ export function WelcomePixelModal() {
     <div
       aria-labelledby="welcome-pixel-title"
       aria-modal="true"
-      className="fixed inset-0 z-[70] flex items-center justify-center bg-black/72 px-4 py-8 backdrop-blur-sm"
+      className="fixed inset-0 z-70 flex items-center justify-center bg-black/72 px-4 py-8 backdrop-blur-sm"
       onMouseDown={() => setIsOpen(false)}
       role="dialog"
     >
@@ -87,7 +87,10 @@ export function WelcomePixelModal() {
           robot game, heart page, logo page, and project structure.
         </p>
 
-        <div className="mt-5 grid gap-2 sm:grid-cols-2" aria-label="Available paths">
+        <div
+          className="mt-5 grid gap-2 sm:grid-cols-2"
+          aria-label="Available paths"
+        >
           {pathChips.map((path) => (
             <Link
               className="pixel-chip px-3 py-2 text-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-200"
