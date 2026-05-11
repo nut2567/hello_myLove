@@ -49,63 +49,8 @@ export function WelcomePixelModal() {
       onMouseDown={() => setIsOpen(false)}
       role="dialog"
     >
-      <style>
-        {`
-          @keyframes welcomePixelBoot {
-            0% { opacity: 0; transform: translateY(16px) scale(0.96); }
-            100% { opacity: 1; transform: translateY(0) scale(1); }
-          }
-
-          @keyframes welcomePixelBlink {
-            0%, 42%, 100% { opacity: 1; }
-            43%, 52% { opacity: 0.28; }
-          }
-
-          @keyframes welcomePixelScan {
-            0% { transform: translateY(-100%); }
-            100% { transform: translateY(100%); }
-          }
-
-          @keyframes welcomePixelFloat {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
-          }
-
-          .welcome-pixel-panel {
-            animation: welcomePixelBoot 360ms steps(5, end) both;
-            image-rendering: pixelated;
-          }
-
-          .welcome-pixel-cursor {
-            animation: welcomePixelBlink 900ms steps(2, end) infinite;
-          }
-
-          .welcome-pixel-scan::after {
-            animation: welcomePixelScan 2200ms linear infinite;
-            background: linear-gradient(180deg, transparent, rgba(34, 211, 238, 0.16), transparent);
-            content: "";
-            inset: 0;
-            pointer-events: none;
-            position: absolute;
-          }
-
-          .welcome-pixel-float {
-            animation: welcomePixelFloat 1200ms steps(3, end) infinite;
-          }
-
-          @media (prefers-reduced-motion: reduce) {
-            .welcome-pixel-panel,
-            .welcome-pixel-cursor,
-            .welcome-pixel-scan::after,
-            .welcome-pixel-float {
-              animation: none;
-            }
-          }
-        `}
-      </style>
-
       <div
-        className="welcome-pixel-panel welcome-pixel-scan relative w-full max-w-lg overflow-hidden border-4 border-white bg-black p-5 font-mono text-white shadow-[10px_10px_0_#22c55e]"
+        className="pixel-panel pixel-panel-boot pixel-scan-panel w-full max-w-lg p-5"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="absolute right-3 top-3 flex gap-1" aria-hidden="true">
@@ -115,7 +60,7 @@ export function WelcomePixelModal() {
         </div>
 
         <div className="flex items-start gap-4 pr-12">
-          <div className="welcome-pixel-float shrink-0 pt-1">
+          <div className="pixel-float shrink-0 pt-1">
             <PixelRobot
               accentClassName="bg-cyan-300"
               isDragging={false}
@@ -132,7 +77,7 @@ export function WelcomePixelModal() {
               id="welcome-pixel-title"
             >
               Welcome to my project webapp
-              <span className="welcome-pixel-cursor text-lime-300">_</span>
+              <span className="pixel-cursor text-lime-300">_</span>
             </h2>
           </div>
         </div>
@@ -145,7 +90,7 @@ export function WelcomePixelModal() {
         <div className="mt-5 grid gap-2 sm:grid-cols-2" aria-label="Available paths">
           {pathChips.map((path) => (
             <Link
-              className="border-2 border-white bg-zinc-950 px-3 py-2 text-xs font-bold text-cyan-100 shadow-[4px_4px_0_#374151] transition hover:bg-cyan-300 hover:text-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-200"
+              className="pixel-chip px-3 py-2 text-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-200"
               href={path}
               key={path}
             >
@@ -156,7 +101,7 @@ export function WelcomePixelModal() {
 
         <div className="mt-6 flex flex-wrap gap-3">
           <button
-            className="border-4 border-white bg-lime-300 px-5 py-3 text-sm font-black text-black shadow-[5px_5px_0_#ffffff] transition hover:bg-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-200"
+            className="pixel-button px-5 py-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-200"
             onClick={() => setIsOpen(false)}
             ref={startButtonRef}
             type="button"
@@ -164,7 +109,7 @@ export function WelcomePixelModal() {
             Start explore
           </button>
           <Link
-            className="border-4 border-white bg-zinc-950 px-5 py-3 text-sm font-black text-white shadow-[5px_5px_0_#374151] transition hover:bg-fuchsia-300 hover:text-black focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-fuchsia-200"
+            className="pixel-button-secondary px-5 py-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-fuchsia-200"
             href="/th/RobotDragGame"
           >
             Play robot game

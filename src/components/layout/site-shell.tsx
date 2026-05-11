@@ -9,10 +9,10 @@ type SiteShellProps = {
 
 export function SiteShell({ children }: SiteShellProps) {
   return (
-    <div className="flex min-h-dvh flex-col bg-background text-foreground">
-      <header className="shrink-0 border-b border-border bg-surface/90">
+    <div className="pixel-app-shell flex min-h-dvh flex-col">
+      <header className="pixel-shell-bar shrink-0 border-b-4">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-6 px-6 py-4">
-          <Link className="text-base font-semibold text-foreground" href="/">
+          <Link className="pixel-shell-link text-base" href="/">
             {siteConfig.name}
           </Link>
           <nav
@@ -20,25 +20,25 @@ export function SiteShell({ children }: SiteShellProps) {
             aria-label="Primary navigation"
           >
             <Link
-              className="transition-colors hover:text-foreground"
+              className="pixel-shell-link"
               href="/th/structure"
             >
               Structure
             </Link>
             <Link
-              className="transition-colors hover:text-foreground"
+              className="pixel-shell-link"
               href="/th/heart"
             >
               Heart
             </Link>
             <Link
-              className="transition-colors hover:text-foreground"
+              className="pixel-shell-link"
               href="/th/logo"
             >
               Logo
             </Link>
             <Link
-              className="transition-colors hover:text-foreground"
+              className="pixel-shell-link"
               href="/th/RobotDragGame"
             >
               Robot Drag Game
@@ -49,7 +49,7 @@ export function SiteShell({ children }: SiteShellProps) {
 
       <main className="flex flex-1 flex-col">{children}</main>
 
-      <footer id="stack" className="shrink-0 border-t border-border bg-surface">
+      <footer id="stack" className="pixel-shell-bar shrink-0 border-t-4">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-6 py-6 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <p>app by nutศึ แวะมาดูบ่อยเดี๋ยวมีอะไรให้เล่น</p>
         </div>

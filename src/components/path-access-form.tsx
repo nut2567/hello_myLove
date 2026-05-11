@@ -59,11 +59,11 @@ export function PathAccessForm({
         >
           Enter your name เพื่อไปยังหน้าเฉพาะของคุณที่เข้าถึงได้
         </label>
-        <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+        <div className="grid gap-4 font-mono sm:grid-cols-[minmax(0,1fr)_auto]">
           <input
             autoCapitalize="none"
             autoComplete="off"
-            className="h-12 min-w-0 rounded-md border border-border bg-surface px-4 text-base text-foreground shadow-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/25"
+            className="pixel-input h-14 px-4 text-base"
             id="path"
             inputMode="url"
             name="path"
@@ -75,7 +75,7 @@ export function PathAccessForm({
             value={path}
           />
           <button
-            className="inline-flex h-12 items-center justify-center rounded-md border border-accent bg-accent px-5 text-sm font-semibold text-accent-foreground shadow-sm transition-colors hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            className="pixel-button h-14 px-5 text-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-200"
             type="submit"
           >
             Continue
@@ -86,15 +86,15 @@ export function PathAccessForm({
       {isModalOpen ? (
         <div
           aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/35 px-6 py-8 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/72 px-6 py-8 backdrop-blur-sm"
           role="dialog"
         >
-          <div className="w-full max-w-md rounded-lg border border-border bg-surface p-6 shadow-soft">
+          <div className="pixel-panel pixel-panel-boot pixel-scan-panel w-full max-w-md p-6">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-normal text-accent">
+              <p className="text-sm font-black uppercase tracking-normal text-cyan-200">
                 Password
               </p>
-              <h2 className="mt-3 text-2xl font-semibold tracking-normal text-foreground">
+              <h2 className="mt-3 text-2xl font-black tracking-normal text-white">
                 Unlock /{pendingPath}
               </h2>
             </div>
@@ -109,7 +109,7 @@ export function PathAccessForm({
               </label>
               {shouldShowError ? (
                 <p
-                  className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-700 dark:text-red-300"
+                  className="border-4 border-red-300 bg-red-950 px-3 py-2 text-sm font-bold text-red-100 shadow-[4px_4px_0_#7f1d1d]"
                   role="alert"
                 >
                   {errorMessage}
@@ -117,7 +117,7 @@ export function PathAccessForm({
               ) : null}
               <input
                 autoComplete="current-password"
-                className="h-12 min-w-0 rounded-md border border-border bg-background px-4 text-base text-foreground shadow-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/25"
+                className="pixel-input h-12 px-4 text-base"
                 id="pin"
                 name="pin"
                 placeholder="Password"
@@ -127,13 +127,13 @@ export function PathAccessForm({
               />
               <div className="flex flex-wrap gap-3">
                 <button
-                  className="inline-flex h-11 items-center justify-center rounded-md border border-accent bg-accent px-5 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  className="pixel-button h-11 px-5 text-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-200"
                   type="submit"
                 >
                   Unlock
                 </button>
                 <button
-                  className="inline-flex h-11 items-center justify-center rounded-md border border-border bg-surface px-5 text-sm font-semibold text-foreground transition-colors hover:border-accent/40 hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  className="pixel-button-secondary h-11 px-5 text-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-fuchsia-200"
                   onClick={() => setIsModalOpen(false)}
                   type="button"
                 >

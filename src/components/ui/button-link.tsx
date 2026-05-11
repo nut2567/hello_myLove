@@ -22,14 +22,13 @@ type ExternalButtonLinkProps = BaseButtonLinkProps & {
 type ButtonLinkProps = InternalButtonLinkProps | ExternalButtonLinkProps;
 
 const variants = {
-  primary: "border-accent bg-accent text-accent-foreground hover:bg-accent/90",
-  secondary:
-    "border-border bg-surface text-foreground hover:border-accent/40 hover:bg-muted",
+  primary: "pixel-button",
+  secondary: "pixel-button-secondary",
 };
 
 export function ButtonLink(props: ButtonLinkProps) {
   const { children, variant = "primary" } = props;
-  const className = `inline-flex h-11 items-center justify-center rounded-md border px-5 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${variants[variant]}`;
+  const className = `${variants[variant]} h-11 px-5 text-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-200`;
 
   if (props.external) {
     return (
