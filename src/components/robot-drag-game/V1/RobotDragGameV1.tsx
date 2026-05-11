@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type PointerEvent } from "react";
 
-import { PixelRobot } from "@/components/PixelRobot";
+import { PixelRobot } from "@/components/robot-drag-game/V1/PixelRobot";
 
 type RobotId = "bolt" | "chip" | "byte" | "nix" | "pixel";
 type Difficulty = "easy" | "medium" | "hard";

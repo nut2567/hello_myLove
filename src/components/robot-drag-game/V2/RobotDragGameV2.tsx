@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  ContactShadows,
-  Environment,
-  Html,
-  OrbitControls,
-} from "@react-three/drei";
+import { ContactShadows, Environment, OrbitControls } from "@react-three/drei";
 import {
   Canvas,
   type ThreeEvent,
@@ -22,140 +17,39 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
-import { Color, MathUtils, Plane, Vector3, type Group, type Mesh } from "three";
+import { Color, Plane, Vector3 } from "three";
 
-type RobotId = "bolt" | "chip" | "byte" | "nix" | "pixel";
-type Difficulty = "easy" | "medium" | "hard";
-
-type RobotConfig = {
-  id: RobotId;
-  name: string;
-  primary: string;
-  secondary: string;
-  emissive: string;
-  phase: number;
-};
-
-type RobotState = {
-  x: number;
-  z: number;
-  yaw: number;
-  captured: boolean;
-};
-
-type RobotStates = Record<RobotId, RobotState>;
-
-type RobotMotion = {
-  vx: number;
-  vz: number;
-  changeAt: number;
-  pauseUntil: number;
-};
-
-type RobotMotions = Record<RobotId, RobotMotion>;
-
-type TargetPoint = {
-  x: number;
-  z: number;
-};
-
-type DragSession = {
-  id: RobotId;
-  offsetX: number;
-  offsetZ: number;
-};
-
-type DifficultySettings = {
-  label: string;
-  speed: number;
-  targetRadius: number;
-  alwaysVisible: boolean;
-  flashDuration: [number, number];
-  flashInterval: [number, number];
-  nearRevealDistance: number;
-};
-
-const ARENA_WIDTH = 9.6;
-const ARENA_DEPTH = 6.2;
-const HALF_WIDTH = ARENA_WIDTH / 2;
-const HALF_DEPTH = ARENA_DEPTH / 2;
-const ROBOT_RADIUS = 0.42;
-const ROBOT_COUNT = 5;
-
-const robotConfigs: RobotConfig[] = [
-  {
-    id: "bolt",
-    name: "Bolt",
-    primary: "#38bdf8",
-    secondary: "#dbeafe",
-    emissive: "#0ea5e9",
-    phase: 0,
-  },
-  {
-    id: "chip",
-    name: "Chip",
-    primary: "#a3e635",
-    secondary: "#ecfccb",
-    emissive: "#65a30d",
-    phase: 1.1,
-  },
-  {
-    id: "byte",
-    name: "Byte",
-    primary: "#f472b6",
-    secondary: "#fce7f3",
-    emissive: "#db2777",
-    phase: 2.2,
-  },
-  {
-    id: "nix",
-    name: "Nix",
-    primary: "#fbbf24",
-    secondary: "#fef3c7",
-    emissive: "#d97706",
-    phase: 3.3,
-  },
-  {
-    id: "pixel",
-    name: "Pixel",
-    primary: "#818cf8",
-    secondary: "#e0e7ff",
-    emissive: "#4f46e5",
-    phase: 4.4,
-  },
-];
-
-const difficulties: Record<Difficulty, DifficultySettings> = {
-  easy: {
-    label: "Easy",
-    speed: 0.62,
-    targetRadius: 0.9,
-    alwaysVisible: true,
-    flashDuration: [900, 1300],
-    flashInterval: [1800, 2600],
-    nearRevealDistance: 1.8,
-  },
-  medium: {
-    label: "Medium",
-    speed: 0.88,
-    targetRadius: 0.76,
-    alwaysVisible: false,
-    flashDuration: [650, 950],
-    flashInterval: [2600, 4300],
-    nearRevealDistance: 1.45,
-  },
-  hard: {
-    label: "Hard",
-    speed: 1.18,
-    targetRadius: 0.64,
-    alwaysVisible: false,
-    flashDuration: [180, 320],
-    flashInterval: [4600, 7200],
-    nearRevealDistance: 1.1,
-  },
-};
-
-const difficultyOrder: Difficulty[] = ["easy", "medium", "hard"];
+import { ArenaFloor } from "@/components/robot-drag-game/V2/ArenaFloor";
+import {
+  DinosaurModel,
+  RobotModel,
+  TargetBeacon,
+} from "@/components/robot-drag-game/V2/models";
+import {
+  DINOSAUR_RADIUS,
+  HALF_DEPTH,
+  HALF_WIDTH,
+  ROBOT_COUNT,
+  ROBOT_RADIUS,
+  dinosaurIds,
+  difficulties,
+  difficultyOrder,
+  getDockPoint,
+  robotConfigs,
+} from "@/components/robot-drag-game/V2/robotConfigs";
+import type {
+  DinosaurId,
+  DinosaurMotion,
+  DinosaurMotions,
+  DinosaurStates,
+  Difficulty,
+  DragSession,
+  RobotId,
+  RobotMotion,
+  RobotMotions,
+  RobotStates,
+  TargetPoint,
+} from "@/components/robot-drag-game/V2/types";
 
 function randomBetween(min: number, max: number) {
   return min + Math.random() * (max - min);
@@ -180,6 +74,112 @@ function createPoint(margin = 0.9): TargetPoint {
   };
 }
 
+function clampArenaPoint(point: TargetPoint, radius: number): TargetPoint {
+  return {
+    x: clamp(point.x, -HALF_WIDTH + radius, HALF_WIDTH - radius),
+    z: clamp(point.z, -HALF_DEPTH + radius, HALF_DEPTH - radius),
+  };
+}
+
+function isTargetGuardedByDinosaur(
+  dinosaurs: DinosaurStates,
+  target: TargetPoint,
+  targetRadius: number,
+) {
+  return dinosaurIds.some(
+    (id) => distance2D(dinosaurs[id], target) <= targetRadius + DINOSAUR_RADIUS,
+  );
+}
+
+function createDinosaurStates(): DinosaurStates {
+  return dinosaurIds.reduce<DinosaurStates>((states, id, index) => {
+    const point = clampArenaPoint(
+      {
+        x:
+          (index === 0 ? HALF_WIDTH * 0.55 : -HALF_WIDTH * 0.55) +
+          randomBetween(-0.35, 0.35),
+        z:
+          (index === 0 ? -HALF_DEPTH * 0.35 : HALF_DEPTH * 0.18) +
+          randomBetween(-0.35, 0.35),
+      },
+      DINOSAUR_RADIUS,
+    );
+
+    states[id] = {
+      ...point,
+      yaw: randomBetween(-Math.PI, Math.PI),
+    };
+
+    return states;
+  }, {} as DinosaurStates);
+}
+
+function clampDinosaurPoint(point: TargetPoint): TargetPoint {
+  return clampArenaPoint(point, DINOSAUR_RADIUS);
+}
+
+function clampRobotPoint(point: TargetPoint): TargetPoint {
+  return clampArenaPoint(point, ROBOT_RADIUS);
+}
+
+function createDinosaurMotion(
+  now: number,
+  difficulty: Difficulty,
+): DinosaurMotion {
+  if (Math.random() < 0.22) {
+    const pauseUntil = now + randomBetween(420, 1100);
+
+    return {
+      vx: 0,
+      vz: 0,
+      changeAt: pauseUntil,
+      pauseUntil,
+    };
+  }
+
+  const angle = randomBetween(0, Math.PI * 2);
+  const speed = randomBetween(0.28, 0.58) * difficulties[difficulty].speed;
+
+  return {
+    vx: Math.cos(angle) * speed,
+    vz: Math.sin(angle) * speed,
+    changeAt: now + randomBetween(1200, 3100),
+    pauseUntil: 0,
+  };
+}
+
+function createDinosaurMotions(
+  now: number,
+  difficulty: Difficulty,
+): DinosaurMotions {
+  return dinosaurIds.reduce<DinosaurMotions>((motions, id) => {
+    motions[id] = createDinosaurMotion(now + randomBetween(0, 600), difficulty);
+
+    return motions;
+  }, {} as DinosaurMotions);
+}
+
+function moveWithinArena(
+  point: TargetPoint,
+  motion: { vx: number; vz: number },
+  radius: number,
+  delta: number,
+) {
+  let nextX = point.x + motion.vx * delta;
+  let nextZ = point.z + motion.vz * delta;
+  const clamped = clampArenaPoint({ x: nextX, z: nextZ }, radius);
+
+  nextX = clamped.x;
+  nextZ = clamped.z;
+
+  return {
+    x: nextX,
+    z: nextZ,
+    hitX: clamped.x !== point.x + motion.vx * delta,
+    hitZ: clamped.z !== point.z + motion.vz * delta,
+  };
+}
+
 function createRobotStates(): RobotStates {
   return robotConfigs.reduce<RobotStates>((states, robot, index) => {
     const column = index % 3;
@@ -190,6 +190,7 @@ function createRobotStates(): RobotStates {
       z: -1.45 + row * 2.65 + randomBetween(-0.2, 0.2),
       yaw: randomBetween(-Math.PI, Math.PI),
       captured: false,
+      removed: false,
     };
 
     return states;
@@ -246,323 +247,27 @@ function createFlashSchedule(now: number, difficulty: Difficulty) {
   };
 }
 
-function getDockPoint(index: number): TargetPoint {
-  const gap = 0.95;
-  const start = -((ROBOT_COUNT - 1) * gap) / 2;
-
-  return {
-    x: start + index * gap,
-    z: HALF_DEPTH - 0.55,
-  };
-}
-
 function countCaptured(states: RobotStates) {
   return robotConfigs.reduce(
-    (total, robot) => total + (states[robot.id].captured ? 1 : 0),
+    (total, robot) =>
+      total +
+      (states[robot.id].captured && !states[robot.id].removed ? 1 : 0),
     0,
-  );
-}
-
-function ArenaFloor({ capturedCount }: { capturedCount: number }) {
-  return (
-    <group>
-      <mesh
-        receiveShadow
-        rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, -0.02, 0]}
-      >
-        <planeGeometry args={[ARENA_WIDTH + 1.4, ARENA_DEPTH + 1.4]} />
-        <meshStandardMaterial
-          color="#07111f"
-          roughness={0.72}
-          metalness={0.08}
-        />
-      </mesh>
-
-      <gridHelper
-        args={[11, 22, "#38bdf8", "#1e293b"]}
-        position={[0, 0.004, 0]}
-      />
-
-      <mesh receiveShadow position={[0, 0.12, -HALF_DEPTH - 0.06]}>
-        <boxGeometry args={[ARENA_WIDTH, 0.24, 0.12]} />
-        <meshStandardMaterial
-          color="#164e63"
-          roughness={0.4}
-          metalness={0.25}
-        />
-      </mesh>
-      <mesh receiveShadow position={[0, 0.12, HALF_DEPTH + 0.06]}>
-        <boxGeometry args={[ARENA_WIDTH, 0.24, 0.12]} />
-        <meshStandardMaterial
-          color="#164e63"
-          roughness={0.4}
-          metalness={0.25}
-        />
-      </mesh>
-      <mesh receiveShadow position={[-HALF_WIDTH - 0.06, 0.12, 0]}>
-        <boxGeometry args={[0.12, 0.24, ARENA_DEPTH]} />
-        <meshStandardMaterial
-          color="#164e63"
-          roughness={0.4}
-          metalness={0.25}
-        />
-      </mesh>
-      <mesh receiveShadow position={[HALF_WIDTH + 0.06, 0.12, 0]}>
-        <boxGeometry args={[0.12, 0.24, ARENA_DEPTH]} />
-        <meshStandardMaterial
-          color="#164e63"
-          roughness={0.4}
-          metalness={0.25}
-        />
-      </mesh>
-
-      {robotConfigs.map((robot, index) => {
-        const dock = getDockPoint(index);
-        const isFilled = index < capturedCount;
-
-        return (
-          <group key={robot.id} position={[dock.x, 0.03, dock.z]}>
-            <mesh rotation={[-Math.PI / 2, 0, 0]}>
-              <ringGeometry args={[0.24, 0.34, 28]} />
-              <meshStandardMaterial
-                color={isFilled ? robot.primary : "#334155"}
-                emissive={isFilled ? robot.emissive : "#0f172a"}
-                emissiveIntensity={isFilled ? 0.75 : 0.08}
-                roughness={0.32}
-                transparent
-                opacity={isFilled ? 0.9 : 0.45}
-              />
-            </mesh>
-          </group>
-        );
-      })}
-    </group>
-  );
-}
-
-function TargetBeacon({
-  point,
-  radius,
-  visible,
-}: {
-  point: TargetPoint;
-  radius: number;
-  visible: boolean;
-}) {
-  const groupRef = useRef<Group>(null);
-
-  useFrame(({ clock }) => {
-    const group = groupRef.current;
-
-    if (!group) {
-      return;
-    }
-
-    const elapsed = clock.elapsedTime;
-    group.rotation.y = elapsed * 0.85;
-    group.scale.setScalar(1 + Math.sin(elapsed * 4.8) * 0.055);
-  });
-
-  return (
-    <group ref={groupRef} position={[point.x, 0.05, point.z]} visible={visible}>
-      <pointLight
-        color="#22d3ee"
-        intensity={1.8}
-        distance={3.8}
-        position={[0, 0.55, 0]}
-      />
-      <mesh rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[radius * 0.88, radius, 100]} />
-        <meshStandardMaterial
-          color="#67e8f9"
-          emissive="#0891b2"
-          emissiveIntensity={1.25}
-          roughness={0.18}
-          transparent
-          opacity={0.82}
-        />
-      </mesh>
-      <mesh position={[0, 0.08, 0]}>
-        <cylinderGeometry args={[radius * 0.38, radius * 0.56, 0.12, 40]} />
-        <meshStandardMaterial
-          color="#cffafe"
-          emissive="#22d3ee"
-          emissiveIntensity={0.9}
-          roughness={0.22}
-          transparent
-          opacity={0.74}
-        />
-      </mesh>
-      <mesh position={[0, 0.54, 0]}>
-        <sphereGeometry args={[0.12, 24, 16]} />
-        <meshStandardMaterial
-          color="#f8fafc"
-          emissive="#67e8f9"
-          emissiveIntensity={1.9}
-          roughness={0.2}
-        />
-      </mesh>
-    </group>
-  );
-}
-
-function RobotModel({
-  config,
-  isDragging,
-  onPointerDown,
-  state,
-}: {
-  config: RobotConfig;
-  isDragging: boolean;
-  onPointerDown: (event: ThreeEvent<PointerEvent>) => void;
-  state: RobotState;
-}) {
-  const groupRef = useRef<Group>(null);
-  const headRef = useRef<Mesh>(null);
-
-  useFrame(({ clock }, delta) => {
-    const group = groupRef.current;
-    const head = headRef.current;
-
-    if (!group) {
-      return;
-    }
-
-    const elapsed = clock.elapsedTime + config.phase;
-    const targetY = state.captured
-      ? 0.78 + Math.sin(elapsed * 2.1) * 0.07
-      : 0.48 + Math.sin(elapsed * 5.4) * (isDragging ? 0.035 : 0.018);
-    const targetScale = state.captured ? 0.82 : isDragging ? 1.16 : 1;
-
-    group.position.x = MathUtils.lerp(group.position.x, state.x, delta * 14);
-    group.position.y = MathUtils.lerp(group.position.y, targetY, delta * 9);
-    group.position.z = MathUtils.lerp(group.position.z, state.z, delta * 14);
-    group.rotation.y = MathUtils.lerp(group.rotation.y, state.yaw, delta * 8);
-    group.scale.setScalar(
-      MathUtils.lerp(group.scale.x, targetScale, delta * 9),
-    );
-
-    if (head) {
-      head.rotation.y = Math.sin(elapsed * 2.4) * 0.16;
-    }
-  });
-
-  return (
-    <group
-      ref={groupRef}
-      onPointerDown={state.captured ? undefined : onPointerDown}
-      position={[state.x, 0.48, state.z]}
-      rotation={[0, state.yaw, 0]}
-    >
-      <mesh castShadow position={[0, 0.1, 0]}>
-        <boxGeometry args={[0.5, 0.58, 0.38]} />
-        <meshStandardMaterial
-          color={config.primary}
-          emissive={config.emissive}
-          emissiveIntensity={isDragging ? 0.42 : 0.16}
-          metalness={0.36}
-          roughness={0.34}
-        />
-      </mesh>
-
-      <mesh ref={headRef} castShadow position={[0, 0.54, 0]}>
-        <boxGeometry args={[0.22, 0.22, 0.22]} />
-        <meshStandardMaterial
-          color={config.secondary}
-          metalness={0.24}
-          roughness={0.26}
-        />
-      </mesh>
-
-      <mesh castShadow position={[-0.16, 0.58, -0.25]}>
-        <sphereGeometry args={[0.045, 16, 12]} />
-        <meshStandardMaterial
-          color="#020617"
-          emissive={config.primary}
-          emissiveIntensity={1.2}
-        />
-      </mesh>
-      <mesh castShadow position={[0.16, 0.58, -0.25]}>
-        <sphereGeometry args={[0.045, 16, 12]} />
-        <meshStandardMaterial
-          color="#020617"
-          emissive={config.primary}
-          emissiveIntensity={1.2}
-        />
-      </mesh>
-
-      <mesh castShadow position={[0, 0.84, 0]} rotation={[0, 0, 0]}>
-        <cylinderGeometry args={[0.025, 0.025, 0.28, 12]} />
-        <meshStandardMaterial
-          color="#cbd5e1"
-          metalness={0.5}
-          roughness={0.28}
-        />
-      </mesh>
-      <mesh castShadow position={[0, 1.02, 0]}>
-        <sphereGeometry args={[0.07, 16, 12]} />
-        <meshStandardMaterial
-          color={config.primary}
-          emissive={config.emissive}
-          emissiveIntensity={0.8}
-          roughness={0.2}
-        />
-      </mesh>
-
-      <mesh castShadow position={[-0.4, 0.15, 0]}>
-        <boxGeometry args={[0.12, 0.42, 0.14]} />
-        <meshStandardMaterial
-          color={config.secondary}
-          metalness={0.18}
-          roughness={0.32}
-        />
-      </mesh>
-      <mesh castShadow position={[0.4, 0.15, 0]}>
-        <boxGeometry args={[0.12, 0.42, 0.14]} />
-        <meshStandardMaterial
-          color={config.secondary}
-          metalness={0.18}
-          roughness={0.32}
-        />
-      </mesh>
-
-      <mesh castShadow position={[-0.18, -0.26, 0.04]}>
-        <boxGeometry args={[0.14, 0.24, 0.2]} />
-        <meshStandardMaterial
-          color="#cbd5e1"
-          metalness={0.34}
-          roughness={0.28}
-        />
-      </mesh>
-      <mesh castShadow position={[0.18, -0.26, 0.04]}>
-        <boxGeometry args={[0.14, 0.24, 0.2]} />
-        <meshStandardMaterial
-          color="#cbd5e1"
-          metalness={0.34}
-          roughness={0.28}
-        />
-      </mesh>
-
-      {isDragging ? (
-        <Html center distanceFactor={7} position={[0, 1.36, 0]}>
-          <div className="rounded-md border border-cyan-200/70 bg-slate-950/85 px-2 py-1 text-xs font-semibold text-cyan-100 shadow-lg">
-            {config.name}
-          </div>
-        </Html>
-      ) : null}
-    </group>
   );
 }
 
 function RobotArena({
   difficulty,
+  dinosaurStates,
   draggedId,
+  draggedDinosaurId,
   isComplete,
   onCapturedCountChange,
   restartKey,
   robotStates,
+  setDinosaurStates,
   setDraggedId,
+  setDraggedDinosaurId,
   setIsComplete,
   setRobotStates,
   setTarget,
@@ -571,12 +276,16 @@ function RobotArena({
   targetVisible,
 }: {
   difficulty: Difficulty;
+  dinosaurStates: DinosaurStates;
   draggedId: RobotId | null;
+  draggedDinosaurId: DinosaurId | null;
   isComplete: boolean;
   onCapturedCountChange: (count: number) => void;
   restartKey: number;
   robotStates: RobotStates;
+  setDinosaurStates: Dispatch<SetStateAction<DinosaurStates>>;
   setDraggedId: Dispatch<SetStateAction<RobotId | null>>;
+  setDraggedDinosaurId: Dispatch<SetStateAction<DinosaurId | null>>;
   setIsComplete: Dispatch<SetStateAction<boolean>>;
   setRobotStates: Dispatch<SetStateAction<RobotStates>>;
   setTarget: Dispatch<SetStateAction<TargetPoint>>;
@@ -586,6 +295,7 @@ function RobotArena({
 }) {
   const { camera, pointer, raycaster } = useThree();
   const statesRef = useRef(robotStates);
+  const dinosaurStatesRef = useRef(dinosaurStates);
   const targetRef = useRef(target);
   const difficultyRef = useRef(difficulty);
   const targetVisibleRef = useRef(targetVisible);
@@ -597,11 +307,18 @@ function RobotArena({
   const motionsRef = useRef<RobotMotions>(
     createRobotMotions(getNow(), difficulty),
   );
+  const dinosaurMotionsRef = useRef<DinosaurMotions>(
+    createDinosaurMotions(getNow(), difficulty),
+  );
   const flashRef = useRef(createFlashSchedule(getNow(), difficulty));
 
   useEffect(() => {
     statesRef.current = robotStates;
   }, [robotStates]);
+
+  useEffect(() => {
+    dinosaurStatesRef.current = dinosaurStates;
+  }, [dinosaurStates]);
 
   useEffect(() => {
     targetRef.current = target;
@@ -627,11 +344,19 @@ function RobotArena({
     const now = getNow();
 
     motionsRef.current = createRobotMotions(now, difficulty);
+    dinosaurMotionsRef.current = createDinosaurMotions(now, difficulty);
     flashRef.current = createFlashSchedule(now, difficulty);
     dragRef.current = null;
     setDraggedId(null);
+    setDraggedDinosaurId(null);
     setTargetVisible(difficulties[difficulty].alwaysVisible);
-  }, [difficulty, restartKey, setDraggedId, setTargetVisible]);
+  }, [
+    difficulty,
+    restartKey,
+    setDraggedDinosaurId,
+    setDraggedId,
+    setTargetVisible,
+  ]);
 
   const finishDrag = useCallback(() => {
     const drag = dragRef.current;
@@ -642,12 +367,17 @@ function RobotArena({
 
     dragRef.current = null;
     setDraggedId(null);
+    setDraggedDinosaurId(null);
+
+    if (drag.kind === "dinosaur") {
+      return;
+    }
 
     const settings = difficulties[difficultyRef.current];
     const currentStates = statesRef.current;
     const currentRobot = currentStates[drag.id];
 
-    if (!currentRobot || currentRobot.captured) {
+    if (!currentRobot || currentRobot.captured || currentRobot.removed) {
       return;
     }
 
@@ -657,6 +387,29 @@ function RobotArena({
     };
 
     if (distance2D(robotPoint, targetRef.current) > settings.targetRadius) {
+      return;
+    }
+
+    if (
+      isTargetGuardedByDinosaur(
+        dinosaurStatesRef.current,
+        targetRef.current,
+        settings.targetRadius,
+      )
+    ) {
+      const nextStates: RobotStates = {
+        ...currentStates,
+        [drag.id]: {
+          ...currentRobot,
+          x: HALF_WIDTH + 2,
+          z: HALF_DEPTH + 2,
+          captured: false,
+          removed: true,
+        },
+      };
+
+      statesRef.current = nextStates;
+      setRobotStates(nextStates);
       return;
     }
 
@@ -696,6 +449,7 @@ function RobotArena({
     setTargetVisible(difficulties[difficultyRef.current].alwaysVisible);
   }, [
     onCapturedCountChange,
+    setDraggedDinosaurId,
     setDraggedId,
     setIsComplete,
     setRobotStates,
@@ -727,39 +481,60 @@ function RobotArena({
 
       if (raycaster.ray.intersectPlane(dragPlane, pointerWorldRef.current)) {
         const drag = dragRef.current;
-        const currentStates = statesRef.current;
-        const currentRobot = currentStates[drag.id];
 
-        if (currentRobot && !currentRobot.captured) {
-          const nextX = clamp(
-            pointerWorldRef.current.x + drag.offsetX,
-            -HALF_WIDTH + ROBOT_RADIUS,
-            HALF_WIDTH - ROBOT_RADIUS,
-          );
-          const nextZ = clamp(
-            pointerWorldRef.current.z + drag.offsetZ,
-            -HALF_DEPTH + ROBOT_RADIUS,
-            HALF_DEPTH - ROBOT_RADIUS,
+        if (drag.kind === "dinosaur") {
+          const currentDinosaurStates = dinosaurStatesRef.current;
+          const currentDinosaur = currentDinosaurStates[drag.id];
+          const nextPoint = clampDinosaurPoint(
+            {
+              x: pointerWorldRef.current.x + drag.offsetX,
+              z: pointerWorldRef.current.z + drag.offsetZ,
+            },
           );
           const nextYaw = Math.atan2(
-            nextX - currentRobot.x,
-            nextZ - currentRobot.z,
+            nextPoint.x - currentDinosaur.x,
+            nextPoint.z - currentDinosaur.z,
           );
-          const nextStates: RobotStates = {
-            ...currentStates,
+          const nextDinosaurStates: DinosaurStates = {
+            ...currentDinosaurStates,
             [drag.id]: {
-              ...currentRobot,
-              x: nextX,
-              z: nextZ,
-              yaw: Number.isFinite(nextYaw) ? nextYaw : currentRobot.yaw,
+              x: nextPoint.x,
+              z: nextPoint.z,
+              yaw: Number.isFinite(nextYaw) ? nextYaw : currentDinosaur.yaw,
             },
           };
 
-          statesRef.current = nextStates;
-          setRobotStates(nextStates);
-          nearReveal =
-            distance2D({ x: nextX, z: nextZ }, targetRef.current) <
-            settings.nearRevealDistance;
+          dinosaurStatesRef.current = nextDinosaurStates;
+          setDinosaurStates(nextDinosaurStates);
+        } else {
+          const currentStates = statesRef.current;
+          const currentRobot = currentStates[drag.id];
+
+          if (currentRobot && !currentRobot.captured && !currentRobot.removed) {
+            const nextPoint = clampRobotPoint({
+              x: pointerWorldRef.current.x + drag.offsetX,
+              z: pointerWorldRef.current.z + drag.offsetZ,
+            });
+            const nextYaw = Math.atan2(
+              nextPoint.x - currentRobot.x,
+              nextPoint.z - currentRobot.z,
+            );
+            const nextStates: RobotStates = {
+              ...currentStates,
+              [drag.id]: {
+                ...currentRobot,
+                x: nextPoint.x,
+                z: nextPoint.z,
+                yaw: Number.isFinite(nextYaw) ? nextYaw : currentRobot.yaw,
+              },
+            };
+
+            statesRef.current = nextStates;
+            setRobotStates(nextStates);
+            nearReveal =
+              distance2D(nextPoint, targetRef.current) <
+              settings.nearRevealDistance;
+          }
         }
       }
     }
@@ -789,15 +564,86 @@ function RobotArena({
       setTargetVisible(nextTargetVisible);
     }
 
+    setDinosaurStates((currentStates) => {
+      let didChange = false;
+      const nextStates: DinosaurStates = { ...currentStates };
+      const activeDrag =
+        dragRef.current?.kind === "dinosaur" ? dragRef.current.id : null;
+
+      dinosaurIds.forEach((id) => {
+        const current = currentStates[id];
+
+        if (id === activeDrag) {
+          return;
+        }
+
+        let motion = dinosaurMotionsRef.current[id];
+
+        if (now >= motion.changeAt) {
+          motion = createDinosaurMotion(now, difficultyRef.current);
+          dinosaurMotionsRef.current[id] = motion;
+        }
+
+        if (now < motion.pauseUntil) {
+          return;
+        }
+
+        const moved = moveWithinArena(
+          current,
+          motion,
+          DINOSAUR_RADIUS,
+          delta,
+        );
+
+        if (moved.hitX) {
+          motion = {
+            ...motion,
+            vx: -motion.vx,
+            changeAt: now + randomBetween(700, 1400),
+          };
+          dinosaurMotionsRef.current[id] = motion;
+        }
+
+        if (moved.hitZ) {
+          motion = {
+            ...motion,
+            vz: -motion.vz,
+            changeAt: now + randomBetween(700, 1400),
+          };
+          dinosaurMotionsRef.current[id] = motion;
+        }
+
+        if (moved.x !== current.x || moved.z !== current.z) {
+          const nextYaw = Math.atan2(motion.vx, motion.vz);
+
+          nextStates[id] = {
+            ...current,
+            x: moved.x,
+            z: moved.z,
+            yaw: Number.isFinite(nextYaw) ? nextYaw : current.yaw,
+          };
+          didChange = true;
+        }
+      });
+
+      if (!didChange) {
+        return currentStates;
+      }
+
+      dinosaurStatesRef.current = nextStates;
+      return nextStates;
+    });
+
     setRobotStates((currentStates) => {
       let didChange = false;
       const nextStates: RobotStates = { ...currentStates };
-      const activeDrag = dragRef.current?.id;
+      const activeDrag =
+        dragRef.current?.kind === "robot" ? dragRef.current.id : null;
 
       robotConfigs.forEach((robot) => {
         const current = currentStates[robot.id];
 
-        if (current.captured || robot.id === activeDrag) {
+        if (current.captured || current.removed || robot.id === activeDrag) {
           return;
         }
 
@@ -871,7 +717,11 @@ function RobotArena({
     id: RobotId,
     event: ThreeEvent<PointerEvent>,
   ) {
-    if (isCompleteRef.current || statesRef.current[id].captured) {
+    if (
+      isCompleteRef.current ||
+      statesRef.current[id].captured ||
+      statesRef.current[id].removed
+    ) {
       return;
     }
 
@@ -879,12 +729,36 @@ function RobotArena({
     const robot = statesRef.current[id];
 
     dragRef.current = {
+      kind: "robot",
       id,
       offsetX: robot.x - event.point.x,
       offsetZ: robot.z - event.point.z,
     };
     draggedIdRef.current = id;
     setDraggedId(id);
+    setDraggedDinosaurId(null);
+  }
+
+  function handleDinosaurPointerDown(
+    id: DinosaurId,
+    event: ThreeEvent<PointerEvent>,
+  ) {
+    if (isCompleteRef.current) {
+      return;
+    }
+
+    event.stopPropagation();
+    const dinosaur = dinosaurStatesRef.current[id];
+
+    dragRef.current = {
+      kind: "dinosaur",
+      id,
+      offsetX: dinosaur.x - event.point.x,
+      offsetZ: dinosaur.z - event.point.z,
+    };
+    draggedIdRef.current = null;
+    setDraggedId(null);
+    setDraggedDinosaurId(id);
   }
 
   return (
@@ -895,6 +769,14 @@ function RobotArena({
         radius={difficulties[difficulty].targetRadius}
         visible={targetVisible || isComplete}
       />
+      {dinosaurIds.map((id) => (
+        <DinosaurModel
+          key={id}
+          isDragging={draggedDinosaurId === id}
+          onPointerDown={(event) => handleDinosaurPointerDown(id, event)}
+          state={dinosaurStates[id]}
+        />
+      ))}
       {robotConfigs.map((robot) => (
         <RobotModel
           key={robot.id}
@@ -913,18 +795,26 @@ export default function RobotDragGameV2() {
   const [robotStates, setRobotStates] =
     useState<RobotStates>(createRobotStates);
   const [target, setTarget] = useState<TargetPoint>(() => createPoint());
+  const [dinosaurStates, setDinosaurStates] =
+    useState<DinosaurStates>(createDinosaurStates);
   const [targetVisible, setTargetVisible] = useState(true);
   const [draggedId, setDraggedId] = useState<RobotId | null>(null);
+  const [draggedDinosaurId, setDraggedDinosaurId] =
+    useState<DinosaurId | null>(null);
   const [capturedCount, setCapturedCount] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [restartKey, setRestartKey] = useState(0);
 
   function restartGame(nextDifficulty = difficulty) {
+    const nextTarget = createPoint();
+
     setDifficulty(nextDifficulty);
     setRobotStates(createRobotStates());
-    setTarget(createPoint());
+    setTarget(nextTarget);
+    setDinosaurStates(createDinosaurStates());
     setTargetVisible(difficulties[nextDifficulty].alwaysVisible);
     setDraggedId(null);
+    setDraggedDinosaurId(null);
     setCapturedCount(0);
     setIsComplete(false);
     setRestartKey((current) => current + 1);
@@ -960,8 +850,8 @@ export default function RobotDragGameV2() {
         <spotLight
           angle={0.48}
           color="#a5f3fc"
-          intensity={14}
-          penumbra={0.55}
+          intensity={140}
+          penumbra={2.55}
           position={[-3.8, 6, -4.2]}
         />
         <Suspense fallback={null}>
@@ -969,12 +859,16 @@ export default function RobotDragGameV2() {
         </Suspense>
         <RobotArena
           difficulty={difficulty}
+          dinosaurStates={dinosaurStates}
           draggedId={draggedId}
+          draggedDinosaurId={draggedDinosaurId}
           isComplete={isComplete}
           onCapturedCountChange={setCapturedCount}
           restartKey={restartKey}
           robotStates={robotStates}
+          setDinosaurStates={setDinosaurStates}
           setDraggedId={setDraggedId}
+          setDraggedDinosaurId={setDraggedDinosaurId}
           setIsComplete={setIsComplete}
           setRobotStates={setRobotStates}
           setTarget={setTarget}
@@ -991,7 +885,7 @@ export default function RobotDragGameV2() {
           scale={10}
         />
         <OrbitControls
-          enabled={!draggedId}
+          enabled={!draggedId && !draggedDinosaurId}
           enableDamping
           enablePan={false}
           maxDistance={10}

@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { useEffect, useRef, useState } from "react";
-
-import { PixelRobot } from "@/components/PixelRobot";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { PixelRobot } from "./robot-drag-game/V1/PixelRobot";
 
 const pathChips = [
   "/th/structure",
@@ -13,9 +12,68 @@ const pathChips = [
   "/th/RobotDragGame",
 ] as const satisfies readonly Route[];
 
+const WELCOME_COOKIE_NAME = "welcome_pixel_hidden_until";
+
+function getCookieValue(name: string): string | null {
+  const cookies = document.cookie
+    .split(";")
+    .map((cookie) => cookie.trim())
+    .filter(Boolean);
+  const prefix = `${name}=`;
+  const match = cookies.find((cookie) => cookie.startsWith(prefix));
+
+  return match ? decodeURIComponent(match.slice(prefix.length)) : null;
+}
+
+function getNextWelcomeResetDate(now = new Date()) {
+  const resetDate = new Date(now);
+
+  resetDate.setHours(11, 59, 0, 0);
+
+  if (now >= resetDate) {
+    resetDate.setDate(resetDate.getDate() + 1);
+  }
+
+  return resetDate;
+}
+
+function hideWelcomeModalToday() {
+  const expiresAt = getNextWelcomeResetDate();
+
+  document.cookie = [
+    `${WELCOME_COOKIE_NAME}=${encodeURIComponent(String(expiresAt.getTime()))}`,
+    `expires=${expiresAt.toUTCString()}`,
+    "path=/",
+    "SameSite=Lax",
+  ].join("; ");
+}
+
+function shouldHideWelcomeModal() {
+  const hiddenUntil = Number(getCookieValue(WELCOME_COOKIE_NAME));
+
+  return Number.isFinite(hiddenUntil) && Date.now() < hiddenUntil;
+}
+
+function getWelcomeModalSnapshot() {
+  return !shouldHideWelcomeModal();
+}
+
+function subscribeToWelcomeCookie(onStoreChange: () => void) {
+  queueMicrotask(onStoreChange);
+
+  return () => undefined;
+}
+
 export function WelcomePixelModal() {
-  const [isOpen, setIsOpen] = useState(true);
+  const shouldShowFromCookie = useSyncExternalStore(
+    subscribeToWelcomeCookie,
+    getWelcomeModalSnapshot,
+    () => false,
+  );
+  const [isDismissed, setIsDismissed] = useState(false);
+  const [rememberToday, setRememberToday] = useState(false);
   const startButtonRef = useRef<HTMLButtonElement>(null);
+  const isOpen = shouldShowFromCookie && !isDismissed;
 
   useEffect(() => {
     if (!isOpen) {
@@ -26,7 +84,11 @@ export function WelcomePixelModal() {
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
-        setIsOpen(false);
+        if (rememberToday) {
+          hideWelcomeModalToday();
+        }
+
+        setIsDismissed(true);
       }
     }
 
@@ -35,7 +97,15 @@ export function WelcomePixelModal() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isOpen]);
+  }, [isOpen, rememberToday]);
+
+  function closeModal() {
+    if (rememberToday) {
+      hideWelcomeModalToday();
+    }
+
+    setIsDismissed(true);
+  }
 
   if (!isOpen) {
     return null;
@@ -45,8 +115,8 @@ export function WelcomePixelModal() {
     <div
       aria-labelledby="welcome-pixel-title"
       aria-modal="true"
-      className="fixed inset-0 z-[70] flex items-center justify-center bg-black/72 px-4 py-8 backdrop-blur-sm"
-      onMouseDown={() => setIsOpen(false)}
+      className="fixed inset-0 z-70 flex items-center justify-center bg-black/72 px-4 py-8 backdrop-blur-sm"
+      onMouseDown={closeModal}
       role="dialog"
     >
       <div
@@ -87,7 +157,10 @@ export function WelcomePixelModal() {
           robot game, heart page, logo page, and project structure.
         </p>
 
-        <div className="mt-5 grid gap-2 sm:grid-cols-2" aria-label="Available paths">
+        <div
+          className="mt-5 grid gap-2 sm:grid-cols-2"
+          aria-label="Available paths"
+        >
           {pathChips.map((path) => (
             <Link
               className="pixel-chip px-3 py-2 text-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-200"
@@ -102,7 +175,7 @@ export function WelcomePixelModal() {
         <div className="mt-6 flex flex-wrap gap-3">
           <button
             className="pixel-button px-5 py-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-200"
-            onClick={() => setIsOpen(false)}
+            onClick={closeModal}
             ref={startButtonRef}
             type="button"
           >
@@ -111,10 +184,21 @@ export function WelcomePixelModal() {
           <Link
             className="pixel-button-secondary px-5 py-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-fuchsia-200"
             href="/th/RobotDragGame"
+            onClick={closeModal}
           >
             Play robot game
           </Link>
         </div>
+
+        <label className="mt-5 flex cursor-pointer items-center gap-3 text-xs font-black uppercase text-cyan-100">
+          <input
+            checked={rememberToday}
+            className="size-5 accent-lime-300"
+            onChange={(event) => setRememberToday(event.target.checked)}
+            type="checkbox"
+          />
+          Don&apos;t show again today
+        </label>
       </div>
     </div>
   );
