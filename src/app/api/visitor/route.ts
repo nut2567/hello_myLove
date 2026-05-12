@@ -5,6 +5,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getMongoDatabase } from "@/lib/mongodb";
 
 export const runtime = "nodejs";
+const DATABASE_NAME = process.env.DATABASE_NAME;
 
 type VisitorPayload = {
   pathname: string;

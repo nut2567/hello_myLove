@@ -1,11 +1,13 @@
 import { attachDatabasePool } from "@vercel/functions";
 import { MongoClient, type Db, type MongoClientOptions } from "mongodb";
+import { getDatabaseName } from "./path-access";
 
 type MongoConnectionState = {
   client?: MongoClient;
   promise?: Promise<MongoClient>;
   uri?: string;
 };
+const DATABASE_NAME = process.env.DATABASE_NAME;
 
 declare global {
   var __mongoConnectionState: MongoConnectionState | undefined;
@@ -65,5 +67,5 @@ export async function getMongoClient(): Promise<MongoClient> {
 export async function getMongoDatabase(): Promise<Db> {
   const client = await getMongoClient();
 
-  return client.db();
+  return client.db(DATABASE_NAME);
 }
