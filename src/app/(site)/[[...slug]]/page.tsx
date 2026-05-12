@@ -6,6 +6,7 @@ import { WelcomePixelModal } from "@/components/welcome-pixel-modal";
 import {
   getPathUserByCredentials,
   getPathUserByName,
+  logExistingPathUserAccess,
   normalizeSlugPathName,
   normalizeSubmittedPathName,
   upsertNewPathRequest,
@@ -53,6 +54,16 @@ async function unlockSubmittedPath(formData: FormData) {
   }
 
   const credentialUser = await getPathUserByCredentials({ name, pin });
+
+  try {
+    await logExistingPathUserAccess({
+      name,
+      passwordCorrect: Boolean(credentialUser),
+      pin,
+    });
+  } catch (error) {
+    console.error("Failed to save existing path user access log.", error);
+  }
 
   if (!credentialUser) {
     redirect(`/${name}?password=${INVALID_PASSWORD_QUERY_VALUE}`);
@@ -198,6 +209,11 @@ function MissingPathContent({
         <p className="mt-5 text-base leading-7 text-muted-foreground">
           {"ยังไม่มี path นี้ กำลังพัฒนารอสักครู่นะครับ แล้วกลับมาใหม่"}
         </p>
+        {requestSaved ? (
+          <p className="mt-4 text-sm font-semibold text-accent">
+            Request saved for this path.
+          </p>
+        ) : null}
         <Link
           className="mt-8 inline-flex h-11 items-center justify-center rounded-md border border-accent bg-accent px-5 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent/90"
           href="/"

@@ -4,6 +4,8 @@ import { getMongoClient } from "@/lib/mongodb";
 
 const USER_COLLECTION_NAME = "user";
 const NEW_USER_COLLECTION_NAME = "newUser";
+const EXISTING_USER_LOG_COLLECTION_NAME = "logOnUser";
+const MAX_WRONG_PASSWORD_LOGS = 50;
 
 export type PathLink = {
   url: string;
@@ -37,6 +39,18 @@ type NewPathRequestDocument = {
   createdAt: string;
   lastPinChangedAtThai: string | null;
   pinChangeCount: number;
+  updatedAt: string;
+};
+
+type ExistingPathUserLogDocument = {
+  _id: string;
+  path: string;
+  visitCount: number;
+  successCount: number;
+  wrongPasswordCount: number;
+  wrongpass: string[];
+  firstVisitedAtThai: string;
+  latestVisitedAtThai: string;
   updatedAt: string;
 };
 
@@ -203,6 +217,67 @@ export async function upsertNewPathRequest({
                 { $ifNull: ["$lastPinChangedAtThai", null] },
               ],
             },
+            updatedAt: nowThai,
+          },
+        },
+      ],
+      { upsert: true },
+    );
+}
+
+export async function logExistingPathUserAccess({
+  name,
+  passwordCorrect,
+  pin,
+}: {
+  name: string;
+  passwordCorrect: boolean;
+  pin: string;
+}): Promise<void> {
+  const client = await getMongoClient();
+  const nowThai = formatThaiDateTimeString(new Date());
+
+  await client
+    .db(getDatabaseName())
+    .collection<ExistingPathUserLogDocument>(
+      EXISTING_USER_LOG_COLLECTION_NAME,
+    )
+    .updateOne(
+      { _id: name },
+      [
+        {
+          $set: {
+            path: name,
+            visitCount: { $add: [{ $ifNull: ["$visitCount", 0] }, 1] },
+            successCount: {
+              $add: [
+                { $ifNull: ["$successCount", 0] },
+                passwordCorrect ? 1 : 0,
+              ],
+            },
+            wrongPasswordCount: {
+              $add: [
+                { $ifNull: ["$wrongPasswordCount", 0] },
+                passwordCorrect ? 0 : 1,
+              ],
+            },
+            wrongpass: passwordCorrect
+              ? { $ifNull: ["$wrongpass", []] }
+              : {
+                  $slice: [
+                    {
+                      $concatArrays: [
+                        { $ifNull: ["$wrongpass", []] },
+                        [pin],
+                      ],
+                    },
+                    -MAX_WRONG_PASSWORD_LOGS,
+                  ],
+                },
+            firstVisitedAtThai: {
+              $ifNull: ["$firstVisitedAtThai", nowThai],
+            },
+            latestVisitedAtThai: nowThai,
             updatedAt: nowThai,
           },
         },

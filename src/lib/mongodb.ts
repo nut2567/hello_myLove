@@ -1,6 +1,5 @@
 import { attachDatabasePool } from "@vercel/functions";
 import { MongoClient, type Db, type MongoClientOptions } from "mongodb";
-import { getDatabaseName } from "./path-access";
 
 type MongoConnectionState = {
   client?: MongoClient;

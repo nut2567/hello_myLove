@@ -15,6 +15,7 @@ import { motion } from "framer-motion";
 import { IoMdHeart } from "react-icons/io";
 import { parseAsInteger, useQueryState } from "nuqs";
 
+import { saveHeartGameScore } from "@/app/(site)/th/heart/actions";
 import {
   useHeartGameDispatch,
   useHeartGameSelector,
@@ -210,6 +211,13 @@ export function HeartButton({
   }
 
   function endGameFromFakeHeart() {
+    void saveHeartGameScore({
+      currentHeartId,
+      score,
+    }).catch((error: unknown) => {
+      console.error("Failed to save heart game score.", error);
+    });
+
     trustedUrlScoresRef.current = new Set([0, urlScore]);
     dispatch(recordFakeHeartClick());
     void setUrlScore(0, { history: "replace" });

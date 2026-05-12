@@ -15,10 +15,30 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: siteConfig.name,
-    template: "%s | %s",
+    default: `${siteConfig.name} | Personal Game Space`,
+    template: `%s | ${siteConfig.name}`,
   },
-  description: "A structured Next.js 16 and Tailwind CSS 4 application.",
+  description:
+    "A personal game space for showcasing and playing only the games created by you.",
+  keywords: [
+    "personal games",
+    "indie games",
+    "game portfolio",
+    "creator-owned games",
+    siteConfig.name,
+  ],
+  openGraph: {
+    title: `${siteConfig.name} | Personal Game Space`,
+    description:
+      "Explore a private collection of games made by you, for your own game world only.",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${siteConfig.name} | Personal Game Space`,
+    description:
+      "A creator-owned game space featuring only your original games.",
+  },
 };
 
 export default function RootLayout({
