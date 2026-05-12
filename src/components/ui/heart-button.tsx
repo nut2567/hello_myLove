@@ -6,6 +6,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
   useSyncExternalStore,
   type CSSProperties,
   ViewTransition,
@@ -42,6 +43,11 @@ type HeartButtonProps = {
 const HEART_SCORE_HEADER_SLOT_ID = "heart-score-header-slot";
 const POINTS_PER_FAKE_HEART = 10;
 
+type FakeHeart = {
+  id: string;
+  style: ReturnType<typeof getHeartPosition>;
+};
+
 function getHeartScoreHeaderSlot() {
   return document.getElementById(HEART_SCORE_HEADER_SLOT_ID);
 }
@@ -55,16 +61,19 @@ function subscribeToHeartScoreHeaderSlot(onStoreChange: () => void) {
   return () => observer.disconnect();
 }
 
-function createFakeHeart(index: number, score: number) {
+function getStylePositionKey(style: CSSProperties | undefined): string {
+  const left = typeof style?.left === "string" ? style.left : "none";
+  const top = typeof style?.top === "string" ? style.top : "none";
+
+  return `${left}-${top}`;
+}
+
+function createFakeHeart(index: number, score: number, styleKey: string) {
   const level = Math.max(1, Math.floor(score / POINTS_PER_FAKE_HEART));
-  const seed = `fake-heart-${level}-${index}`;
-  const direction = index % 2 === 0 ? 1 : -1;
+  const seed = `fake-heart-${level}-${index}-${styleKey}`;
 
   return {
-    driftX: direction * (24 + index * 7),
-    driftY: ((index % 3) - 1) * 18,
     id: seed,
-    rotate: direction * (8 + index * 3),
     style: getHeartPosition(seed),
   };
 }
@@ -105,16 +114,19 @@ function createScoreImage({ label, score, title }: ScoreImageOptions) {
   context.strokeRect(44, 44, width - 88, height - 88);
 
   context.fillStyle = "#fda4af";
-  context.font = "900 34px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
+  context.font =
+    "900 34px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
   context.textAlign = "center";
   context.fillText(title, width / 2, 96);
 
   context.fillStyle = "#bef264";
-  context.font = "900 82px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
+  context.font =
+    "900 82px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
   context.fillText(String(score), width / 2, 198);
 
   context.fillStyle = "#67e8f9";
-  context.font = "800 24px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
+  context.font =
+    "800 24px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
   context.fillText(label, width / 2, 246);
 
   for (let index = 0; index < 11; index += 1) {
@@ -148,11 +160,9 @@ export function HeartButton({
     getHeartScoreHeaderSlot,
     () => null,
   );
+  const [fakeHearts, setFakeHearts] = useState<FakeHeart[]>([]);
   const trustedUrlScoresRef = useRef<Set<number>>(new Set([0]));
-  const fakeHearts = Array.from(
-    { length: Math.floor(score / POINTS_PER_FAKE_HEART) },
-    (_, index) => createFakeHeart(index, score),
-  );
+  const stylePositionKey = getStylePositionKey(style);
   const scorePopup = useMemo(() => {
     if (cheated) {
       return {
@@ -181,6 +191,27 @@ export function HeartButton({
 
     return createScoreImage(scorePopup);
   }, [scorePopup]);
+
+  useEffect(() => {
+    let active = true;
+
+    queueMicrotask(() => {
+      if (!active) {
+        return;
+      }
+
+      setFakeHearts(
+        Array.from(
+          { length: Math.floor(score / POINTS_PER_FAKE_HEART) },
+          (_, index) => createFakeHeart(index, score, stylePositionKey),
+        ),
+      );
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [score, stylePositionKey]);
 
   useEffect(() => {
     if (urlScore === score) {
@@ -305,45 +336,49 @@ export function HeartButton({
           )
         : null}
 
-      {fakeHearts.map((fakeHeart, index) => (
+      {fakeHearts.map((fakeHeart) => (
         <motion.button
           animate={{
-            opacity: [0.55, 0.9, 0.55],
-            rotate: [-fakeHeart.rotate, fakeHeart.rotate, -fakeHeart.rotate],
-            scale: [0.78, 1.04, 0.78],
-            x: [0, fakeHeart.driftX, 0],
-            y: [0, fakeHeart.driftY, 0],
+            opacity: [0.55, 1],
+            scale: [0.78, 0.9],
           }}
-          aria-label="Fake heart game over"
-          className="absolute z-10 inline-flex size-20 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center text-red-400/80 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
-          initial={{ opacity: 0, scale: 0.45 }}
+          className="absolute z-20 inline-flex size-20 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center text-red-300 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+          initial={{ opacity: 0, scale: 1 }}
           key={fakeHeart.id}
           onClick={endGameFromFakeHeart}
           style={fakeHeart.style}
           transition={{
-            delay: index * 0.08,
-            duration: 1.5 + index * 0.12,
+            delay: 0.08,
+            duration: 0.9,
             ease: "easeInOut",
             repeat: Infinity,
           }}
           type="button"
-          whileHover={{ scale: 1.15 }}
-          whileTap={{ scale: 0.72 }}
         >
-          <IoMdHeart aria-hidden className="size-16" />
+          <IoMdHeart aria-hidden className="size-20" />
         </motion.button>
       ))}
 
       <ViewTransition name="IoMdHeart">
-        <button
-          aria-label={ariaLabel}
-          className={`absolute z-20 inline-flex size-24 cursor-pointer items-center justify-center text-red-300 transition-transform hover:scale-110 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring ${className}`}
+        <motion.button
+          animate={{
+            opacity: [0.55, 1],
+            scale: [0.78, 1],
+          }}
+          transition={{
+            delay: 0.08,
+            duration: 0.9,
+            ease: "easeInOut",
+            repeat: Infinity,
+          }}
+          className={`absolute z-10 inline-flex size-20 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center text-red-300 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring ${className}`}
+          initial={{ opacity: 0, scale: 1 }}
           onClick={goToRandomHeart}
           style={style}
           type="button"
         >
           <IoMdHeart aria-hidden className="size-20" />
-        </button>
+        </motion.button>
       </ViewTransition>
     </>
   );
