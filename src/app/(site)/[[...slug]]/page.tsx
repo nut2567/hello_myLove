@@ -363,7 +363,7 @@ export default async function CatchAllPage({
         action={unlockSubmittedPath}
         errorMessage={
           hasInvalidPassword
-            ? "Password is incorrect. Please try again."
+            ? "Password is incorrect. หรืออติดต่อ admin เพื่อขอเข้าถึงหน้านี้ครับ"
             : undefined
         }
         initialModalOpen
