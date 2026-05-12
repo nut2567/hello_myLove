@@ -3,8 +3,10 @@ import crypto from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { getMongoDatabase } from "@/lib/mongodb";
+import { checkVisitorEventRateLimit } from "@/lib/visitor-rate-limit";
 
 export const runtime = "nodejs";
+const VISITOR_EVENT_COLLECTION_NAME = "visitor_events";
 
 type VisitorPayload = {
   pathname: string;
@@ -140,6 +142,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const now = new Date();
   const document: VisitorEventDocument = {
     pathname: payload.pathname,
     ipHash: hashIp(payload.ip),
@@ -150,13 +153,30 @@ export async function POST(request: NextRequest) {
     region: payload.region,
     latitude: payload.latitude,
     longitude: payload.longitude,
-    createdAt: new Date(),
+    createdAt: now,
   };
 
   try {
+    const rateLimitResult = await checkVisitorEventRateLimit({
+      ipHash: document.ipHash,
+      pathname: document.pathname,
+      userAgent: document.userAgent,
+    });
+
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          ok: true,
+          skipped: true,
+          reason: rateLimitResult.reason,
+        },
+        { status: 202 },
+      );
+    }
+
     const db = await getMongoDatabase();
     await db
-      .collection<VisitorEventDocument>("visitor_events")
+      .collection<VisitorEventDocument>(VISITOR_EVENT_COLLECTION_NAME)
       .insertOne(document);
 
     return NextResponse.json({ ok: true }, { status: 201 });
