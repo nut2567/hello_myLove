@@ -11,7 +11,7 @@ import {
 } from "@/components/robot-drag-game/V2/robotConfigs";
 import type {
   DinosaurState,
-  ModelPointerDown,
+  ModelPointerHandler,
   RobotConfig,
   RobotState,
   TargetPoint,
@@ -67,11 +67,15 @@ export function RobotModel({
   config,
   isDragging,
   onPointerDown,
+  onPointerOut,
+  onPointerOver,
   state,
 }: {
   config: RobotConfig;
   isDragging: boolean;
-  onPointerDown: ModelPointerDown;
+  onPointerDown: ModelPointerHandler;
+  onPointerOut: ModelPointerHandler;
+  onPointerOver: ModelPointerHandler;
   state: RobotState;
 }) {
   const groupRef = useRef<Group>(null);
@@ -113,6 +117,8 @@ export function RobotModel({
     <group
       ref={groupRef}
       onPointerDown={state.captured ? undefined : onPointerDown}
+      onPointerOut={state.captured ? undefined : onPointerOut}
+      onPointerOver={state.captured ? undefined : onPointerOver}
       position={[state.x, 0.16, state.z]}
       rotation={[0, state.yaw, 0]}
       scale={[ROBOT_MODEL_SCALE, ROBOT_MODEL_SCALE, ROBOT_MODEL_SCALE]}
@@ -220,10 +226,14 @@ export function RobotModel({
 export function DinosaurModel({
   isDragging,
   onPointerDown,
+  onPointerOut,
+  onPointerOver,
   state,
 }: {
   isDragging: boolean;
-  onPointerDown: ModelPointerDown;
+  onPointerDown: ModelPointerHandler;
+  onPointerOut: ModelPointerHandler;
+  onPointerOver: ModelPointerHandler;
   state: DinosaurState;
 }) {
   const groupRef = useRef<Group>(null);
@@ -261,6 +271,8 @@ export function DinosaurModel({
     <group
       ref={groupRef}
       onPointerDown={onPointerDown}
+      onPointerOut={onPointerOut}
+      onPointerOver={onPointerOver}
       position={[state.x, 0.32, state.z]}
       rotation={[0, state.yaw, 0]}
       scale={[DINOSAUR_MODEL_SCALE, DINOSAUR_MODEL_SCALE, DINOSAUR_MODEL_SCALE]}

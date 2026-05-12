@@ -258,8 +258,7 @@ function createFlashSchedule(now: number, difficulty: Difficulty) {
 function countCaptured(states: RobotStates) {
   return robotConfigs.reduce(
     (total, robot) =>
-      total +
-      (states[robot.id].captured && !states[robot.id].removed ? 1 : 0),
+      total + (states[robot.id].captured && !states[robot.id].removed ? 1 : 0),
     0,
   );
 }
@@ -309,6 +308,8 @@ function RobotArena({
   const targetVisibleRef = useRef(targetVisible);
   const isCompleteRef = useRef(isComplete);
   const draggedIdRef = useRef(draggedId);
+  const hoveredDinosaurIdRef = useRef<DinosaurId | null>(null);
+  const hoveredRobotIdRef = useRef<RobotId | null>(null);
   const dragRef = useRef<DragSession | null>(null);
   const pointerWorldRef = useRef(new Vector3());
   const dragPlane = useMemo(() => new Plane(new Vector3(0, 1, 0), 0), []);
@@ -355,6 +356,8 @@ function RobotArena({
     dinosaurMotionsRef.current = createDinosaurMotions(now, difficulty);
     flashRef.current = createFlashSchedule(now, difficulty);
     dragRef.current = null;
+    hoveredDinosaurIdRef.current = null;
+    hoveredRobotIdRef.current = null;
     setDraggedId(null);
     setDraggedDinosaurId(null);
     setTargetVisible(difficulties[difficulty].alwaysVisible);
@@ -493,12 +496,10 @@ function RobotArena({
         if (drag.kind === "dinosaur") {
           const currentDinosaurStates = dinosaurStatesRef.current;
           const currentDinosaur = currentDinosaurStates[drag.id];
-          const nextPoint = clampDinosaurPoint(
-            {
-              x: pointerWorldRef.current.x + drag.offsetX,
-              z: pointerWorldRef.current.z + drag.offsetZ,
-            },
-          );
+          const nextPoint = clampDinosaurPoint({
+            x: pointerWorldRef.current.x + drag.offsetX,
+            z: pointerWorldRef.current.z + drag.offsetZ,
+          });
           const nextYaw = getForwardYaw(
             nextPoint.x - currentDinosaur.x,
             nextPoint.z - currentDinosaur.z,
@@ -577,11 +578,12 @@ function RobotArena({
       const nextStates: DinosaurStates = { ...currentStates };
       const activeDrag =
         dragRef.current?.kind === "dinosaur" ? dragRef.current.id : null;
+      const activeHover = hoveredDinosaurIdRef.current;
 
       dinosaurIds.forEach((id) => {
         const current = currentStates[id];
 
-        if (id === activeDrag) {
+        if (id === activeDrag || id === activeHover) {
           return;
         }
 
@@ -596,12 +598,7 @@ function RobotArena({
           return;
         }
 
-        const moved = moveWithinArena(
-          current,
-          motion,
-          DINOSAUR_RADIUS,
-          delta,
-        );
+        const moved = moveWithinArena(current, motion, DINOSAUR_RADIUS, delta);
 
         if (moved.hitX) {
           motion = {
@@ -647,11 +644,17 @@ function RobotArena({
       const nextStates: RobotStates = { ...currentStates };
       const activeDrag =
         dragRef.current?.kind === "robot" ? dragRef.current.id : null;
+      const activeHover = hoveredRobotIdRef.current;
 
       robotConfigs.forEach((robot) => {
         const current = currentStates[robot.id];
 
-        if (current.captured || current.removed || robot.id === activeDrag) {
+        if (
+          current.captured ||
+          current.removed ||
+          robot.id === activeDrag ||
+          robot.id === activeHover
+        ) {
           return;
         }
 
@@ -747,6 +750,33 @@ function RobotArena({
     setDraggedDinosaurId(null);
   }
 
+  function handleRobotPointerOver(
+    id: RobotId,
+    event: ThreeEvent<PointerEvent>,
+  ) {
+    if (
+      isCompleteRef.current ||
+      statesRef.current[id].captured ||
+      statesRef.current[id].removed
+    ) {
+      return;
+    }
+
+    event.stopPropagation();
+    hoveredRobotIdRef.current = id;
+  }
+
+  function handleRobotPointerOut(
+    id: RobotId,
+    event: ThreeEvent<PointerEvent>,
+  ) {
+    event.stopPropagation();
+
+    if (hoveredRobotIdRef.current === id) {
+      hoveredRobotIdRef.current = null;
+    }
+  }
+
   function handleDinosaurPointerDown(
     id: DinosaurId,
     event: ThreeEvent<PointerEvent>,
@@ -769,6 +799,29 @@ function RobotArena({
     setDraggedDinosaurId(id);
   }
 
+  function handleDinosaurPointerOver(
+    id: DinosaurId,
+    event: ThreeEvent<PointerEvent>,
+  ) {
+    if (isCompleteRef.current) {
+      return;
+    }
+
+    event.stopPropagation();
+    hoveredDinosaurIdRef.current = id;
+  }
+
+  function handleDinosaurPointerOut(
+    id: DinosaurId,
+    event: ThreeEvent<PointerEvent>,
+  ) {
+    event.stopPropagation();
+
+    if (hoveredDinosaurIdRef.current === id) {
+      hoveredDinosaurIdRef.current = null;
+    }
+  }
+
   return (
     <>
       <ArenaFloor capturedCount={countCaptured(robotStates)} />
@@ -782,6 +835,8 @@ function RobotArena({
           key={id}
           isDragging={draggedDinosaurId === id}
           onPointerDown={(event) => handleDinosaurPointerDown(id, event)}
+          onPointerOut={(event) => handleDinosaurPointerOut(id, event)}
+          onPointerOver={(event) => handleDinosaurPointerOver(id, event)}
           state={dinosaurStates[id]}
         />
       ))}
@@ -791,6 +846,8 @@ function RobotArena({
           config={robot}
           isDragging={draggedId === robot.id}
           onPointerDown={(event) => handleRobotPointerDown(robot.id, event)}
+          onPointerOut={(event) => handleRobotPointerOut(robot.id, event)}
+          onPointerOver={(event) => handleRobotPointerOver(robot.id, event)}
           state={robotStates[robot.id]}
         />
       ))}
@@ -807,8 +864,9 @@ export default function RobotDragGameV2() {
     useState<DinosaurStates>(createDinosaurStates);
   const [targetVisible, setTargetVisible] = useState(true);
   const [draggedId, setDraggedId] = useState<RobotId | null>(null);
-  const [draggedDinosaurId, setDraggedDinosaurId] =
-    useState<DinosaurId | null>(null);
+  const [draggedDinosaurId, setDraggedDinosaurId] = useState<DinosaurId | null>(
+    null,
+  );
   const [capturedCount, setCapturedCount] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [restartKey, setRestartKey] = useState(0);
@@ -846,24 +904,24 @@ export default function RobotDragGameV2() {
         shadows
       >
         <color attach="background" args={["#050816"]} />
-        <fog attach="fog" args={["#050816", 8, 16]} />
+        {/* <fog attach="fog" args={["#050816", 8, 16]} /> */}
         <ambientLight intensity={0.55} />
         <directionalLight
           castShadow
-          intensity={2.6}
-          position={[4.5, 6.5, 4.8]}
-          shadow-mapSize-height={1024}
-          shadow-mapSize-width={1024}
+          intensity={2.2}
+          position={[2, 2, 3]}
+          shadow-mapSize-height={524}
+          shadow-mapSize-width={524}
         />
-        <spotLight
+        {/* <spotLight
           angle={0.48}
           color="#a5f3fc"
           intensity={140}
           penumbra={2.55}
           position={[-3.8, 6, -4.2]}
-        />
+        /> */}
         <Suspense fallback={null}>
-          <Environment preset="city" />
+          <Environment preset="night" />
         </Suspense>
         <RobotArena
           difficulty={difficulty}

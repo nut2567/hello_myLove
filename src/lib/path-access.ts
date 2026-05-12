@@ -34,12 +34,10 @@ export function getDatabaseName(): string {
 type NewPathRequestDocument = {
   path: string;
   pin: string;
-  createdAt: Date;
-  createdAtThai: string;
+  createdAt: string;
   lastPinChangedAtThai: string | null;
   pinChangeCount: number;
-  updatedAt: Date;
-  updatedAtThai: string;
+  updatedAt: string;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -177,10 +175,7 @@ export async function upsertNewPathRequest({
   const now = new Date();
   const nowThai = formatThaiDateTimeString(now);
   const pinChangedExpression = {
-    $and: [
-      { $ne: [{ $type: "$pin" }, "missing"] },
-      { $ne: ["$pin", pin] },
-    ],
+    $and: [{ $ne: [{ $type: "$pin" }, "missing"] }, { $ne: ["$pin", pin] }],
   };
 
   await client
@@ -193,8 +188,7 @@ export async function upsertNewPathRequest({
           $set: {
             path: name,
             pin,
-            createdAt: { $ifNull: ["$createdAt", now] },
-            createdAtThai: { $ifNull: ["$createdAtThai", nowThai] },
+            createdAt: { $ifNull: ["$createdAtThai", nowThai] },
             pinChangeCount: {
               $cond: [
                 pinChangedExpression,
@@ -209,8 +203,7 @@ export async function upsertNewPathRequest({
                 { $ifNull: ["$lastPinChangedAtThai", null] },
               ],
             },
-            updatedAt: now,
-            updatedAtThai: nowThai,
+            updatedAt: nowThai,
           },
         },
       ],

@@ -76,4 +76,4 @@ export type DifficultySettings = {
   nearRevealDistance: number;
 };
 
-export type ModelPointerDown = (event: ThreeEvent<PointerEvent>) => void;
+export type ModelPointerHandler = (event: ThreeEvent<PointerEvent>) => void;
