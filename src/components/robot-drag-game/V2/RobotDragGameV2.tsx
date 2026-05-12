@@ -63,6 +63,14 @@ function distance2D(a: TargetPoint, b: TargetPoint) {
   return Math.hypot(a.x - b.x, a.z - b.z);
 }
 
+function getForwardYaw(deltaX: number, deltaZ: number) {
+  if (Math.hypot(deltaX, deltaZ) < 0.0001) {
+    return Number.NaN;
+  }
+
+  return Math.atan2(-deltaX, -deltaZ);
+}
+
 function getNow() {
   return typeof performance === "undefined" ? 0 : performance.now();
 }
@@ -491,7 +499,7 @@ function RobotArena({
               z: pointerWorldRef.current.z + drag.offsetZ,
             },
           );
-          const nextYaw = Math.atan2(
+          const nextYaw = getForwardYaw(
             nextPoint.x - currentDinosaur.x,
             nextPoint.z - currentDinosaur.z,
           );
@@ -515,7 +523,7 @@ function RobotArena({
               x: pointerWorldRef.current.x + drag.offsetX,
               z: pointerWorldRef.current.z + drag.offsetZ,
             });
-            const nextYaw = Math.atan2(
+            const nextYaw = getForwardYaw(
               nextPoint.x - currentRobot.x,
               nextPoint.z - currentRobot.z,
             );
@@ -614,7 +622,7 @@ function RobotArena({
         }
 
         if (moved.x !== current.x || moved.z !== current.z) {
-          const nextYaw = Math.atan2(motion.vx, motion.vz);
+          const nextYaw = getForwardYaw(motion.vx, motion.vz);
 
           nextStates[id] = {
             ...current,
@@ -692,7 +700,7 @@ function RobotArena({
         }
 
         if (nextX !== current.x || nextZ !== current.z) {
-          const nextYaw = Math.atan2(motion.vx, motion.vz);
+          const nextYaw = getForwardYaw(motion.vx, motion.vz);
 
           nextStates[robot.id] = {
             ...current,
