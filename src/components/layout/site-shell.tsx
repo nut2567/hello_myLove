@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 
 import { siteConfig } from "@/lib/site";
+import { PixelProjectLogo } from "@/components/ui/pixel-project-logo";
 
 type SiteShellProps = {
   children: ReactNode;
@@ -12,8 +13,12 @@ export function SiteShell({ children }: SiteShellProps) {
     <div className="pixel-app-shell flex min-h-dvh flex-col">
       <header className="pixel-shell-header pixel-shell-bar shrink-0 border-b-4 backdrop-blur-sm bg-transparent">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-6 px-6 py-4">
-          <Link className="pixel-shell-link text-base" href="/">
-            {siteConfig.name}
+          <Link
+            aria-label={siteConfig.name}
+            className="inline-flex shrink-0 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-200"
+            href="/"
+          >
+            <PixelProjectLogo name={siteConfig.name} />
           </Link>
           <div
             className="ml-auto flex shrink-0 items-center justify-end"

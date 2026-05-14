@@ -7,7 +7,6 @@ import { formatThaiDateTimeString, getCurrentDate } from "@/lib/date-time";
 import { getMongoDatabase } from "@/lib/mongodb";
 import { isHeartId } from "@/lib/heart-id";
 
-const HEART_GAME_PLAYER_COLLECTION_NAME = "heart_game_players";
 const HEART_GAME_SCORE_COLLECTION_NAME = "heart_game";
 const MAX_PLAYER_NAME_LENGTH = 40;
 
@@ -31,12 +30,6 @@ type HeartGameScoreDocument = {
   pathType: string | null;
   playerId?: string;
   score: number;
-  createdAt: string;
-};
-
-type HeartGamePlayerDocument = {
-  playerId: string;
-  playerName: string;
   createdAt: string;
 };
 
@@ -124,16 +117,6 @@ export async function createHeartGamePlayer({
     name: playerName,
     type,
   };
-  const document: HeartGamePlayerDocument = {
-    playerId: player.id,
-    playerName: player.name,
-    createdAt: formatThaiDateTimeString(),
-  };
-
-  const db = await getMongoDatabase();
-  await db
-    .collection<HeartGamePlayerDocument>(HEART_GAME_PLAYER_COLLECTION_NAME)
-    .insertOne(document);
 
   return { ok: true, player };
 }

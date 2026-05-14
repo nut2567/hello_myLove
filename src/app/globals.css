@@ -108,6 +108,84 @@ body {
   color: var(--pixel-cyan);
 }
 
+.pixel-project-logo {
+  align-items: center;
+  background:
+    linear-gradient(rgb(103 232 249 / 0.12) 2px, transparent 2px),
+    linear-gradient(90deg, rgb(103 232 249 / 0.12) 2px, transparent 2px),
+    #020617;
+  background-size:
+    12px 12px,
+    12px 12px,
+    auto;
+  border: 3px solid var(--border);
+  box-shadow: 4px 4px 0 var(--pixel-shadow);
+  color: var(--foreground);
+  display: inline-flex;
+  height: 2.75rem;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  width: 9.75rem;
+}
+
+.pixel-project-logo::before {
+  background: var(--pixel-cyan);
+  content: "";
+  height: 3px;
+  left: 0;
+  opacity: 0.9;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  animation: pixelProjectLogoScan 1800ms steps(5, end) infinite;
+}
+
+.pixel-project-logo-icon-stage,
+.pixel-project-logo-name {
+  align-items: center;
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  position: absolute;
+}
+
+.pixel-project-logo-runner {
+  align-items: center;
+  display: flex;
+  height: 2.5rem;
+  justify-content: center;
+  width: 2.5rem;
+}
+
+.pixel-project-logo-robot {
+  display: block;
+  transform: scale(0.72);
+  transform-origin: 50% 50%;
+}
+
+.pixel-project-logo-name {
+  color: var(--pixel-lime);
+  font-size: 0.9rem;
+  font-weight: 900;
+  line-height: 1;
+  padding-inline: 0.75rem;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.pixel-project-logo-name::after {
+  color: var(--pixel-cyan);
+  content: "_";
+  margin-left: 0.1rem;
+  animation: pixelBlink 900ms steps(2, end) infinite;
+}
+
+.pixel-project-logo:hover {
+  border-color: var(--pixel-cyan);
+  box-shadow: 4px 4px 0 var(--accent);
+}
+
 .pixel-panel {
   position: relative;
   border: 4px solid var(--border);
@@ -311,6 +389,17 @@ body {
   }
 }
 
+@keyframes pixelProjectLogoScan {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(2.4rem);
+  }
+}
+
 @keyframes pixelFloat {
   0%,
   100% {
@@ -440,11 +529,25 @@ body {
   .pixel-button:hover,
   .pixel-cursor,
   .pixel-float,
+  .pixel-project-logo::before,
+  .pixel-project-logo-icon-stage,
+  .pixel-project-logo-runner,
+  .pixel-project-logo-name,
+  .pixel-project-logo-name::after,
   .pixel-robot,
   .pixel-robot-left-arm,
   .pixel-robot-right-arm,
   .pixel-robot-left-leg,
   .pixel-robot-right-leg {
     animation: none;
+  }
+
+  .pixel-project-logo-icon-stage {
+    opacity: 0;
+  }
+
+  .pixel-project-logo-name {
+    opacity: 1;
+    transform: none;
   }
 }
