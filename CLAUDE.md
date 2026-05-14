@@ -1,1 +1,3 @@
 @AGENTS.md
+@CODEX.md
+@SKILL.md

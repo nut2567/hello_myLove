@@ -1,0 +1,17 @@
+services:
+  hello-next:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: hello-next:local
+    container_name: hello-next
+    environment:
+      - NODE_ENV=production
+      - HOSTNAME=0.0.0.0
+      - HOST=http://localhost:3600
+      - PORT=3600
+      - NEXT_PUBLIC_HOST=http://localhost:3600
+    user: nextjs
+    ports:
+      - "3600:3600"
+    restart: always
