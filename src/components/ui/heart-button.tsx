@@ -9,6 +9,7 @@ import {
   useState,
   useSyncExternalStore,
   type CSSProperties,
+  type FormEvent,
   ViewTransition,
 } from "react";
 import { createPortal } from "react-dom";
@@ -16,7 +17,12 @@ import { motion } from "framer-motion";
 import { IoMdHeart } from "react-icons/io";
 import { parseAsInteger, useQueryState } from "nuqs";
 
-import { saveHeartGameScore } from "@/app/(site)/th/heart/actions";
+import {
+  createHeartGamePlayer,
+  saveHeartGameScore,
+  type HeartGamePlayer,
+  type HeartGamePlayerType,
+} from "@/app/(site)/th/heart/actions";
 import {
   useHeartGameDispatch,
   useHeartGameSelector,
@@ -35,12 +41,14 @@ import {
 
 type HeartButtonProps = {
   "aria-label": string;
+  authenticatedPlayerName?: string | null;
   className?: string;
   currentHeartId: string;
   style?: CSSProperties;
 };
 
 const HEART_SCORE_HEADER_SLOT_ID = "heart-score-header-slot";
+const HEART_GAME_PLAYER_STORAGE_KEY = "heart-game-player-v1";
 const POINTS_PER_FAKE_HEART = 10;
 
 type FakeHeart = {
@@ -137,8 +145,53 @@ function createScoreImage({ label, score, title }: ScoreImageOptions) {
   return canvas.toDataURL("image/png");
 }
 
+function isStoredHeartGamePlayer(value: unknown): value is HeartGamePlayer {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return false;
+  }
+
+  const player = value as Record<string, unknown>;
+
+  return (
+    typeof player.id === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      player.id,
+    ) &&
+    typeof player.name === "string" &&
+    player.name.trim().length > 0 &&
+    player.name.trim().length <= 40 &&
+    (player.type === "guest" || player.type === "named")
+  );
+}
+
+function readStoredHeartGamePlayer(): HeartGamePlayer | null {
+  try {
+    const storedValue = window.localStorage.getItem(
+      HEART_GAME_PLAYER_STORAGE_KEY,
+    );
+
+    if (!storedValue) {
+      return null;
+    }
+
+    const parsedValue: unknown = JSON.parse(storedValue);
+
+    return isStoredHeartGamePlayer(parsedValue) ? parsedValue : null;
+  } catch {
+    return null;
+  }
+}
+
+function storeHeartGamePlayer(player: HeartGamePlayer) {
+  window.localStorage.setItem(
+    HEART_GAME_PLAYER_STORAGE_KEY,
+    JSON.stringify(player),
+  );
+}
+
 export function HeartButton({
   "aria-label": ariaLabel,
+  authenticatedPlayerName = null,
   className = "",
   currentHeartId,
   style,
@@ -161,7 +214,17 @@ export function HeartButton({
     () => null,
   );
   const [fakeHearts, setFakeHearts] = useState<FakeHeart[]>([]);
+  const [player, setPlayer] = useState<HeartGamePlayer | null>(null);
+  const [playerName, setPlayerName] = useState("");
+  const [playerReady, setPlayerReady] = useState(false);
+  const [playerSaveError, setPlayerSaveError] = useState<string | null>(null);
+  const [savingPlayerType, setSavingPlayerType] =
+    useState<HeartGamePlayerType | null>(null);
   const trustedUrlScoresRef = useRef<Set<number>>(new Set([0]));
+  const hasAuthenticatedPlayer = Boolean(authenticatedPlayerName);
+  const activePlayer = hasAuthenticatedPlayer ? null : player;
+  const canPlay = hasAuthenticatedPlayer || Boolean(activePlayer);
+  const shouldShowPlayerPopup = playerReady && !canPlay;
   const stylePositionKey = getStylePositionKey(style);
   const scorePopup = useMemo(() => {
     if (cheated) {
@@ -200,6 +263,29 @@ export function HeartButton({
         return;
       }
 
+      if (hasAuthenticatedPlayer) {
+        setPlayer(null);
+        setPlayerReady(true);
+        return;
+      }
+
+      setPlayer(readStoredHeartGamePlayer());
+      setPlayerReady(true);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [hasAuthenticatedPlayer]);
+
+  useEffect(() => {
+    let active = true;
+
+    queueMicrotask(() => {
+      if (!active) {
+        return;
+      }
+
       setFakeHearts(
         Array.from(
           { length: Math.floor(score / POINTS_PER_FAKE_HEART) },
@@ -228,7 +314,47 @@ export function HeartButton({
     void setUrlScore(0, { history: "replace" });
   }, [dispatch, score, setUrlScore, urlScore]);
 
+  async function createPlayer(type: HeartGamePlayerType, name?: string) {
+    setSavingPlayerType(type);
+    setPlayerSaveError(null);
+
+    try {
+      const result = await createHeartGamePlayer({ name, type });
+
+      if (!result.ok) {
+        setPlayerSaveError(
+          result.reason === "invalid-player-name"
+            ? "Enter a name between 1 and 40 characters."
+            : "Player type is invalid.",
+        );
+        return;
+      }
+
+      setPlayer(result.player);
+      storeHeartGamePlayer(result.player);
+      setPlayerName("");
+    } catch (error) {
+      console.error("Failed to save heart game player.", error);
+      setPlayerSaveError("Could not save player. Try again.");
+    } finally {
+      setSavingPlayerType(null);
+    }
+  }
+
+  function playAsGuest() {
+    void createPlayer("guest");
+  }
+
+  function submitPlayerName(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void createPlayer("named", playerName);
+  }
+
   function goToRandomHeart() {
+    if (!canPlay) {
+      return;
+    }
+
     const nextScore = score + 1;
     const nextHeartId = createHeartId(currentHeartId);
     const previousTrustedScores = trustedUrlScoresRef.current;
@@ -242,8 +368,13 @@ export function HeartButton({
   }
 
   function endGameFromFakeHeart() {
+    if (!canPlay) {
+      return;
+    }
+
     void saveHeartGameScore({
       currentHeartId,
+      player: activePlayer,
       score,
     }).catch((error: unknown) => {
       console.error("Failed to save heart game score.", error);
@@ -284,9 +415,14 @@ export function HeartButton({
         </p>
       ) : gameOver ? (
         <p className="font-black uppercase text-red-200">Game over</p>
+      ) : !canPlay ? (
+        <p className="font-black uppercase text-cyan-200">Choose player</p>
       ) : (
         <div className="grid gap-0.5">
           <p className="font-black uppercase text-lime-200">Score {score}</p>
+          <p className="text-[10px] font-black uppercase text-cyan-200">
+            {authenticatedPlayerName ?? activePlayer?.name}
+          </p>
         </div>
       )}
     </div>
@@ -295,6 +431,76 @@ export function HeartButton({
   return (
     <>
       {scoreHeaderSlot ? createPortal(scoreStatus, scoreHeaderSlot) : null}
+
+      {shouldShowPlayerPopup
+        ? createPortal(
+            <div
+              aria-label="Choose heart game player"
+              aria-modal="true"
+              className="fixed inset-0 z-[60] grid place-items-center bg-black/75 px-5 backdrop-blur-sm"
+              role="dialog"
+            >
+              <div className="pixel-panel pixel-panel-boot grid w-full max-w-md gap-5 p-5">
+                <div className="grid gap-2">
+                  <p className="text-xs font-black uppercase text-cyan-200">
+                    Heart game player
+                  </p>
+                  <h2 className="text-2xl font-black uppercase text-lime-200">
+                    Who is playing?
+                  </h2>
+                </div>
+
+                <button
+                  className="pixel-chip min-h-12 px-4 py-3 text-sm font-black uppercase text-cyan-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-200 disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={savingPlayerType !== null}
+                  onClick={playAsGuest}
+                  type="button"
+                >
+                  {savingPlayerType === "guest"
+                    ? "Saving guest"
+                    : "Play as guest"}
+                </button>
+
+                <form className="grid gap-3" onSubmit={submitPlayerName}>
+                  <label
+                    className="text-xs font-black uppercase text-cyan-100"
+                    htmlFor="heart-game-player-name"
+                  >
+                    Or enter your name
+                  </label>
+                  <input
+                    autoComplete="nickname"
+                    className="pixel-input h-12 w-full px-3 text-sm"
+                    disabled={savingPlayerType !== null}
+                    id="heart-game-player-name"
+                    maxLength={40}
+                    onChange={(event) => setPlayerName(event.target.value)}
+                    placeholder="Player name"
+                    type="text"
+                    value={playerName}
+                  />
+                  {playerSaveError ? (
+                    <p className="text-xs font-black uppercase text-red-200">
+                      {playerSaveError}
+                    </p>
+                  ) : null}
+                  <button
+                    className="pixel-chip min-h-12 px-4 py-3 text-sm font-black uppercase text-lime-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-200 disabled:cursor-not-allowed disabled:opacity-60"
+                    disabled={
+                      savingPlayerType !== null || playerName.trim().length === 0
+                    }
+                    type="submit"
+                  >
+                    {savingPlayerType === "named"
+                      ? "Saving player"
+                      : "Start with name"}
+                  </button>
+                </form>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
 
       {scorePopup && scorePopupImage
         ? createPortal(
@@ -338,11 +544,13 @@ export function HeartButton({
 
       {fakeHearts.map((fakeHeart) => (
         <motion.button
+          aria-label="Fake heart ends the game"
           animate={{
             opacity: [0.55, 1],
             scale: [0.78, 0.9],
           }}
           className="absolute z-20 inline-flex size-20 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center text-red-300 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+          disabled={!canPlay}
           initial={{ opacity: 0, scale: 1 }}
           key={fakeHeart.id}
           onClick={endGameFromFakeHeart}
@@ -361,6 +569,7 @@ export function HeartButton({
 
       <ViewTransition name="IoMdHeart">
         <motion.button
+          aria-label={ariaLabel}
           animate={{
             opacity: [0.55, 1],
             scale: [0.78, 1],
@@ -372,6 +581,7 @@ export function HeartButton({
             repeat: Infinity,
           }}
           className={`absolute z-10 inline-flex size-20 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center text-red-300 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring ${className}`}
+          disabled={!canPlay}
           initial={{ opacity: 0, scale: 1 }}
           onClick={goToRandomHeart}
           style={style}

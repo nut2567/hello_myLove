@@ -1,5 +1,6 @@
 import "server-only";
 
+import { getCurrentThaiDateTimeString } from "@/lib/date-time";
 import { getMongoClient } from "@/lib/mongodb";
 
 const USER_COLLECTION_NAME = "user";
@@ -130,19 +131,6 @@ export function normalizeSlugPathName(slug: string[]): string | null {
   return normalizePathName(slug.join("/"));
 }
 
-function formatThaiDateTimeString(date: Date): string {
-  return new Intl.DateTimeFormat("sv-SE", {
-    timeZone: "Asia/Bangkok",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-  }).format(date);
-}
-
 async function findPathUser(
   query: PathUserQuery,
 ): Promise<PublicPathUser | null> {
@@ -186,8 +174,7 @@ export async function upsertNewPathRequest({
   pin: string;
 }): Promise<void> {
   const client = await getMongoClient();
-  const now = new Date();
-  const nowThai = formatThaiDateTimeString(now);
+  const nowThai = getCurrentThaiDateTimeString();
   const pinChangedExpression = {
     $and: [{ $ne: [{ $type: "$pin" }, "missing"] }, { $ne: ["$pin", pin] }],
   };
@@ -235,7 +222,7 @@ export async function logExistingPathUserAccess({
   pin: string;
 }): Promise<void> {
   const client = await getMongoClient();
-  const nowThai = formatThaiDateTimeString(new Date());
+  const nowThai = getCurrentThaiDateTimeString();
 
   await client
     .db(getDatabaseName())

@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 
 import { NextResponse, type NextRequest } from "next/server";
 
+import { getCurrentDate } from "@/lib/date-time";
 import { getMongoDatabase } from "@/lib/mongodb";
 
 export const runtime = "nodejs";
@@ -150,7 +151,7 @@ export async function POST(request: NextRequest) {
     region: payload.region,
     latitude: payload.latitude,
     longitude: payload.longitude,
-    createdAt: new Date(),
+    createdAt: getCurrentDate(),
   };
 
   try {

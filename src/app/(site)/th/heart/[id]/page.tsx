@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { HeartGameClient } from "@/components/heart-game-client";
 import { notFound } from "next/navigation";
+import { auth } from "@/auth";
 import {
   getHeartPosition,
   isHeartId,
@@ -24,6 +25,7 @@ export default async function HeartIdPage({ params }: HeartIdPageProps) {
   const { id } = await params;
   const heartId = validateHeartId(id);
   const position = getHeartPosition(heartId);
+  const session = await auth();
 
   return (
     <main className="relative flex flex-1 overflow-hidden">
@@ -40,6 +42,7 @@ export default async function HeartIdPage({ params }: HeartIdPageProps) {
           key={heartId}
           className="absolute -translate-x-1/2 -translate-y-1/2"
           currentHeartId={heartId}
+          authenticatedPlayerName={session?.user?.pathName ?? null}
           style={position}
         />
       </Suspense>

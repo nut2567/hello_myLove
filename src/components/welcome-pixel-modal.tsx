@@ -4,6 +4,10 @@ import Link from "next/link";
 import type { Route } from "next";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { PixelRobot } from "./robot-drag-game/V1/PixelRobot";
+import {
+  getCurrentTimestamp,
+  getNextThaiDailyDate,
+} from "@/lib/date-time";
 
 const pathChips = [
   "/th/structure",
@@ -25,16 +29,8 @@ function getCookieValue(name: string): string | null {
   return match ? decodeURIComponent(match.slice(prefix.length)) : null;
 }
 
-function getNextWelcomeResetDate(now = new Date()) {
-  const resetDate = new Date(now);
-
-  resetDate.setHours(11, 59, 0, 0);
-
-  if (now >= resetDate) {
-    resetDate.setDate(resetDate.getDate() + 1);
-  }
-
-  return resetDate;
+function getNextWelcomeResetDate() {
+  return getNextThaiDailyDate({ hour: 11, minute: 59 });
 }
 
 function hideWelcomeModalToday() {
@@ -51,7 +47,7 @@ function hideWelcomeModalToday() {
 function shouldHideWelcomeModal() {
   const hiddenUntil = Number(getCookieValue(WELCOME_COOKIE_NAME));
 
-  return Number.isFinite(hiddenUntil) && Date.now() < hiddenUntil;
+  return Number.isFinite(hiddenUntil) && getCurrentTimestamp() < hiddenUntil;
 }
 
 function getWelcomeModalSnapshot() {
