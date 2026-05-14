@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type PointerEvent } from "react";
 
 import { PixelRobot } from "@/components/robot-drag-game/V1/PixelRobot";
+import { PixelFireworks } from "@/components/ui/pixel-fireworks";
 
 type RobotId = "bolt" | "chip" | "byte" | "nix" | "pixel";
 type Difficulty = "easy" | "medium" | "hard";
@@ -844,9 +845,10 @@ export default function RobotDragGameV1() {
       })}
 
       {isWin ? (
-        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/60">
+        <div className="absolute inset-0 z-30 flex items-center justify-center overflow-hidden bg-black/60">
+          <PixelFireworks active={isWin} anchorCount={8} />
           <button
-            className="border-4 border-white bg-black px-8 py-5 font-mono text-5xl font-bold tracking-normal text-white shadow-[8px_8px_0_#22c55e]"
+            className="relative z-10 border-4 border-white bg-black px-8 py-5 font-mono text-5xl font-bold tracking-normal text-white shadow-[8px_8px_0_#22c55e]"
             onClick={() => restartGame()}
             type="button"
           >

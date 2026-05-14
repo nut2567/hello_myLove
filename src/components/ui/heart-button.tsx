@@ -38,6 +38,7 @@ import {
   createHeartRoute,
   getHeartPosition,
 } from "@/lib/heart-id";
+import { PixelFireworks } from "@/components/ui/pixel-fireworks";
 
 type HeartButtonProps = {
   "aria-label": string;
@@ -509,10 +510,11 @@ export function HeartButton({
             <div
               aria-label={scorePopup.title}
               aria-modal="true"
-              className="fixed inset-0 z-50 grid place-items-center bg-black/70 px-5 backdrop-blur-sm"
+              className="fixed inset-0 z-50 grid place-items-center overflow-hidden bg-black/70 px-5 backdrop-blur-sm"
               role="dialog"
             >
-              <div className="pixel-panel grid max-w-xl gap-4 p-4">
+              <PixelFireworks active={gameOver} anchorCount={8} />
+              <div className="pixel-panel relative z-10 grid max-w-xl gap-4 p-4">
                 <Image
                   alt={`${scorePopup.title} score card`}
                   className="w-full max-w-[520px] border-4 border-cyan-300"

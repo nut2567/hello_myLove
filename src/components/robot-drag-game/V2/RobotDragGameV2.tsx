@@ -25,6 +25,7 @@ import {
   RobotModel,
   TargetBeacon,
 } from "@/components/robot-drag-game/V2/models";
+import { PixelFireworks } from "@/components/ui/pixel-fireworks";
 import {
   DINOSAUR_RADIUS,
   HALF_DEPTH,
@@ -998,8 +999,9 @@ export default function RobotDragGameV2() {
       </div>
 
       {isComplete ? (
-        <div className="absolute inset-0 z-30 flex items-center justify-center bg-slate-950/62 px-6 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-lg border border-cyan-200/30 bg-slate-950/88 p-6 text-center shadow-2xl">
+        <div className="absolute inset-0 z-30 flex items-center justify-center overflow-hidden bg-slate-950/62 px-6 backdrop-blur-sm">
+          <PixelFireworks active={isComplete} anchorCount={9} />
+          <div className="relative z-10 w-full max-w-md rounded-lg border border-cyan-200/30 bg-slate-950/88 p-6 text-center shadow-2xl">
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-cyan-200">
               Mission Complete
             </p>
