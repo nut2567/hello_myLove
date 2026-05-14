@@ -10,7 +10,10 @@ type PixelFireworksProps = {
   className?: string;
   maxScale?: number;
   minScale?: number;
+  sequenceSize?: number;
 };
+
+type FireworkModel = "burst" | "heart";
 
 type FireworkAnchor = {
   bits: FireworkBit[];
@@ -40,6 +43,8 @@ const FIREWORK_COLORS = [
   "bg-amber-200",
   "bg-sky-300",
 ] as const;
+const DEFAULT_SEQUENCE_SIZE = 50;
+const FIREWORK_DURATION_S = 1.8;
 
 function randomBetween(min: number, max: number) {
   return min + Math.random() * (max - min);
@@ -63,9 +68,12 @@ function createFireworkAnchors(
   minScale: number,
   maxScale: number,
 ): FireworkAnchor[] {
+  const cycleId = randomInteger(1000, 9999);
+
   return Array.from({ length: count }, (_, index) => {
     let left = randomBetween(9, 91);
     let top = randomBetween(10, 90);
+    const model: FireworkModel = Math.random() < 0.45 ? "heart" : "burst";
 
     for (let attempt = 0; attempt < 12; attempt += 1) {
       if (!isInsideCenterPopupArea(left, top)) {
@@ -77,13 +85,13 @@ function createFireworkAnchors(
     }
 
     return {
-      bits: createFireworkBits(bitsPerFirework, index),
+      bits: createFireworkBits(bitsPerFirework, index, model),
       centerColor: randomItem(FIREWORK_COLORS),
       centerSize: randomInteger(8, 14),
-      delay: index * 0.24 + randomBetween(0, 0.36),
-      id: `pixel-firework-${index}-${Math.round(left * 10)}-${Math.round(
-        top * 10,
-      )}`,
+      delay: randomBetween(0, 0.12),
+      id: `pixel-firework-${cycleId}-${index}-${Math.round(
+        left * 10,
+      )}-${Math.round(top * 10)}`,
       left: `${Math.round(left)}%`,
       scale: randomBetween(minScale, maxScale),
       top: `${Math.round(top)}%`,
@@ -91,27 +99,57 @@ function createFireworkAnchors(
   });
 }
 
-function createFireworkBits(count: number, anchorIndex: number): FireworkBit[] {
+function createHeartPoint(index: number, count: number) {
+  const t = (index / count) * Math.PI * 2;
+  const x = 16 * Math.sin(t) ** 3;
+  const y =
+    13 * Math.cos(t) -
+    5 * Math.cos(2 * t) -
+    2 * Math.cos(3 * t) -
+    Math.cos(4 * t);
+  const size = randomBetween(3.2, 5.1);
+
+  return {
+    x: x * size + randomBetween(-5, 5),
+    y: -y * size + randomBetween(-5, 5),
+  };
+}
+
+function createBurstPoint(index: number, count: number) {
+  const angle =
+    (index / count) * Math.PI * 2 +
+    randomBetween(0, Math.PI * 2) +
+    randomBetween(-0.18, 0.18);
+  const distance = randomBetween(36, 94);
+
+  return {
+    x: Math.cos(angle) * distance,
+    y: Math.sin(angle) * distance,
+  };
+}
+
+function createFireworkBits(
+  count: number,
+  anchorIndex: number,
+  model: FireworkModel,
+): FireworkBit[] {
   const randomizedCount = randomInteger(
     Math.max(8, Math.floor(count * 0.75)),
     Math.max(9, Math.ceil(count * 1.25)),
   );
-  const angleOffset = randomBetween(0, Math.PI * 2);
 
   return Array.from({ length: randomizedCount }, (_, index) => {
-    const angle =
-      angleOffset +
-      (index / randomizedCount) * Math.PI * 2 +
-      randomBetween(-0.18, 0.18);
-    const distance = randomBetween(36, 94);
-    const size = randomInteger(4, 10);
+    const point =
+      model === "heart"
+        ? createHeartPoint(index, randomizedCount)
+        : createBurstPoint(index, randomizedCount);
 
     return {
       color: randomItem(FIREWORK_COLORS),
       id: `pixel-firework-bit-${anchorIndex}-${index}`,
-      size,
-      x: Math.cos(angle) * distance,
-      y: Math.sin(angle) * distance,
+      size: randomInteger(4, 10),
+      x: point.x,
+      y: point.y,
     };
   });
 }
@@ -123,6 +161,7 @@ export function PixelFireworks({
   className = "",
   maxScale = 1.3,
   minScale = 0.8,
+  sequenceSize = DEFAULT_SEQUENCE_SIZE,
 }: PixelFireworksProps) {
   const [anchors, setAnchors] = useState<FireworkAnchor[]>([]);
 
@@ -131,16 +170,16 @@ export function PixelFireworks({
       return;
     }
 
-    let mounted = true;
+    let cancelled = false;
 
     queueMicrotask(() => {
-      if (!mounted) {
+      if (cancelled) {
         return;
       }
 
       setAnchors(
         createFireworkAnchors(
-          anchorCount,
+          Math.max(1, Math.round(sequenceSize)),
           bitsPerFirework,
           minScale,
           maxScale,
@@ -149,9 +188,19 @@ export function PixelFireworks({
     });
 
     return () => {
-      mounted = false;
+      cancelled = true;
     };
-  }, [active, anchorCount, bitsPerFirework, maxScale, minScale]);
+  }, [active, bitsPerFirework, maxScale, minScale, sequenceSize]);
+
+  const stepSeconds = FIREWORK_DURATION_S / Math.max(1, anchorCount);
+  const sequenceSeconds = Math.max(
+    FIREWORK_DURATION_S,
+    anchors.length * stepSeconds,
+  );
+  const repeatDelaySeconds = Math.max(
+    0,
+    sequenceSeconds - FIREWORK_DURATION_S,
+  );
 
   return (
     <AnimatePresence>
@@ -176,10 +225,11 @@ export function PixelFireworks({
                 top: anchor.top,
               }}
               transition={{
-                delay: anchor.delay,
-                duration: 1.8,
+                delay: anchorIndex * stepSeconds + anchor.delay,
+                duration: FIREWORK_DURATION_S,
                 ease: "easeInOut",
                 repeat: Infinity,
+                repeatDelay: repeatDelaySeconds,
               }}
             >
               <motion.span
@@ -193,10 +243,11 @@ export function PixelFireworks({
                   width: anchor.centerSize,
                 }}
                 transition={{
-                  delay: anchor.delay,
-                  duration: 1.8,
+                  delay: anchorIndex * stepSeconds + anchor.delay,
+                  duration: FIREWORK_DURATION_S,
                   ease: "easeOut",
                   repeat: Infinity,
+                  repeatDelay: repeatDelaySeconds,
                 }}
               />
               {anchor.bits.map((bit, bitIndex) => (
@@ -224,10 +275,14 @@ export function PixelFireworks({
                     width: bit.size,
                   }}
                   transition={{
-                    delay: anchor.delay + bitIndex * 0.012,
-                    duration: 1.8,
+                    delay:
+                      anchorIndex * stepSeconds +
+                      anchor.delay +
+                      bitIndex * 0.012,
+                    duration: FIREWORK_DURATION_S,
                     ease: [0.16, 1, 0.3, 1],
                     repeat: Infinity,
+                    repeatDelay: repeatDelaySeconds,
                   }}
                 />
               ))}
