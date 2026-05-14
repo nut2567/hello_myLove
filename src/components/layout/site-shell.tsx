@@ -44,7 +44,7 @@ export function SiteShell({ children }: SiteShellProps) {
       <footer id="stack" className="pixel-shell-bar shrink-0 border-t-4">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-6 py-6 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <p>app by nutศึ แวะมาดูบ่อยเดี๋ยวมีอะไรให้เล่น</p>
-          <p>Early Access V0.2.156</p>
+          <p>Early Access V0.2.178</p>
         </div>
       </footer>
     </div>

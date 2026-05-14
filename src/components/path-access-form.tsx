@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
+import { TypewriterText } from "./ui/typewriter-text";
 
 type PathAccessFormProps = {
   action: (formData: FormData) => void | Promise<void>;
@@ -52,12 +53,15 @@ export function PathAccessForm({
 
   return (
     <div className="flex flex-1 items-center justify-center px-6 py-12">
-      <form className="grid w-full max-w-lg gap-4" onSubmit={handlePathSubmit}>
+      <form className="grid w-full max-w-2xl gap-4" onSubmit={handlePathSubmit}>
         <label
           className="text-xl font-medium leading-6 text-foreground"
           htmlFor="path"
         >
-          Enter your name เพื่อไปยังหน้าเฉพาะของคุณที่เข้าถึงได้
+          <TypewriterText
+            cursorClassName="pixel-cursor text-lime-300"
+            text="Enter your name เพื่อไปยังหน้าเฉพาะของคุณที่เข้าถึงได้"
+          />
         </label>
         <div className="grid gap-4 font-mono sm:grid-cols-[minmax(0,1fr)_auto]">
           <input

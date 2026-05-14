@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { PixelRobot } from "./robot-drag-game/V1/PixelRobot";
 import { PixelFireworks } from "@/components/ui/pixel-fireworks";
+import { TypewriterText } from "@/components/ui/typewriter-text";
 import {
   getCurrentTimestamp,
   getNextThaiDailyDate,
@@ -226,8 +227,10 @@ export function WelcomePixelModal() {
                   className="mt-3 text-3xl font-black leading-tight tracking-normal text-white"
                   id="welcome-pixel-title"
                 >
-                  Welcome to my project webapp
-                  <span className="pixel-cursor text-lime-300">_</span>
+                  <TypewriterText
+                    cursorClassName="pixel-cursor text-lime-300"
+                    text="Welcome to my project webapp"
+                  />
                 </h2>
               </div>
             </motion.div>

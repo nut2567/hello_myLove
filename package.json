@@ -1,6 +1,6 @@
 {
   "name": "hello-my-love",
-  "version": "0.1.0",
+  "version": "0.2.178",
   "private": true,
   "scripts": {
     "dev": "next dev",
