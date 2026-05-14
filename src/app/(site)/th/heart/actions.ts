@@ -3,10 +3,7 @@
 import crypto from "node:crypto";
 
 import { auth } from "@/auth";
-import {
-  formatThaiDateTimeString,
-  getCurrentDate,
-} from "@/lib/date-time";
+import { formatThaiDateTimeString, getCurrentDate } from "@/lib/date-time";
 import { getMongoDatabase } from "@/lib/mongodb";
 import { isHeartId } from "@/lib/heart-id";
 
@@ -33,11 +30,8 @@ type HeartGameScoreDocument = {
   pathName: string;
   pathType: string | null;
   playerId?: string;
-  playerName?: string;
-  playerType?: HeartGamePlayerType | "path";
   score: number;
-  createdAt: Date;
-  createdAtThai: string;
+  createdAt: string;
 };
 
 type HeartGamePlayerDocument = {
@@ -57,7 +51,11 @@ export type CreateHeartGamePlayerResult =
 
 export type SaveHeartGameScoreResult =
   | { ok: true; saved: true }
-  | { ok: false; saved: false; reason: "invalid-score" | "invalid-heart-id" | "invalid-player" };
+  | {
+      ok: false;
+      saved: false;
+      reason: "invalid-score" | "invalid-heart-id" | "invalid-player";
+    };
 
 function isValidScore(score: number): boolean {
   return Number.isSafeInteger(score) && score >= 0 && score <= 1_000_000;
@@ -169,11 +167,8 @@ export async function saveHeartGameScore({
     pathName: pathName ?? normalizedPlayer?.name ?? "Guest",
     pathType,
     playerId: normalizedPlayer?.id,
-    playerName: normalizedPlayer?.name,
-    playerType: pathName ? "path" : normalizedPlayer?.type,
     score,
-    createdAt: now,
-    createdAtThai: formatThaiDateTimeString(now),
+    createdAt: formatThaiDateTimeString(now),
   };
 
   const db = await getMongoDatabase();

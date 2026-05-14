@@ -415,14 +415,15 @@ export function HeartButton({
         </p>
       ) : gameOver ? (
         <p className="font-black uppercase text-red-200">Game over</p>
-      ) : !canPlay ? (
-        <p className="font-black uppercase text-cyan-200">Choose player</p>
       ) : (
-        <div className="grid gap-0.5">
-          <p className="font-black uppercase text-lime-200">Score {score}</p>
+        // !canPlay ? (
+        //   <p className="font-black uppercase text-cyan-200">Choose player</p>
+        // ) :
+        <div className="flex gap-2 items-center justify-center">
           <p className="text-[10px] font-black uppercase text-cyan-200">
             {authenticatedPlayerName ?? activePlayer?.name}
           </p>
+          <p className="font-black uppercase text-lime-200">Score {score}</p>
         </div>
       )}
     </div>
@@ -487,7 +488,8 @@ export function HeartButton({
                   <button
                     className="pixel-chip min-h-12 px-4 py-3 text-sm font-black uppercase text-lime-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-200 disabled:cursor-not-allowed disabled:opacity-60"
                     disabled={
-                      savingPlayerType !== null || playerName.trim().length === 0
+                      savingPlayerType !== null ||
+                      playerName.trim().length === 0
                     }
                     type="submit"
                   >

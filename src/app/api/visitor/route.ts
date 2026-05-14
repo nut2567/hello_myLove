@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 
 import { NextResponse, type NextRequest } from "next/server";
 
-import { getCurrentDate } from "@/lib/date-time";
+import { formatThaiDateTimeString, getCurrentDate } from "@/lib/date-time";
 import { getMongoDatabase } from "@/lib/mongodb";
 
 export const runtime = "nodejs";
@@ -29,7 +29,7 @@ type VisitorEventDocument = {
   region: string | null;
   latitude: string | null;
   longitude: string | null;
-  createdAt: Date;
+  createdAt: string;
 };
 
 type JsonObject = Record<string, unknown>;
@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
     region: payload.region,
     latitude: payload.latitude,
     longitude: payload.longitude,
-    createdAt: getCurrentDate(),
+    createdAt: formatThaiDateTimeString(getCurrentDate()),
   };
 
   try {
