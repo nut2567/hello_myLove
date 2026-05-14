@@ -6,7 +6,6 @@ type MongoConnectionState = {
   promise?: Promise<MongoClient>;
   uri?: string;
 };
-const DATABASE_NAME = process.env.DATABASE_NAME;
 
 declare global {
   var __mongoConnectionState: MongoConnectionState | undefined;
@@ -33,6 +32,16 @@ function createMongoClient(uri: string): MongoClient {
   attachDatabasePool(client);
 
   return client;
+}
+
+function getDatabaseName(): string {
+  const databaseName = process.env.DATABASE_NAME?.trim();
+
+  if (!databaseName) {
+    throw new Error("DATABASE_NAME is not configured.");
+  }
+
+  return databaseName;
 }
 
 export async function getMongoClient(): Promise<MongoClient> {
@@ -64,7 +73,8 @@ export async function getMongoClient(): Promise<MongoClient> {
 }
 
 export async function getMongoDatabase(): Promise<Db> {
+  const databaseName = getDatabaseName();
   const client = await getMongoClient();
 
-  return client.db(DATABASE_NAME);
+  return client.db(databaseName);
 }

@@ -17,6 +17,8 @@ type VisitorPayload = {
   longitude: string | null;
 };
 
+const VISITOR_TRACKING_SECRET_HEADER = "x-visitor-tracking-secret";
+
 const ASSET_EXTENSION_PATTERN =
   /\.(?:avif|css|gif|ico|jpeg|jpg|js|json|map|png|svg|webp|woff2?)$/i;
 
@@ -67,6 +69,12 @@ function getSlug(pathname: string): string[] {
     .split("/")
     .map((segment) => segment.trim())
     .filter(Boolean);
+}
+
+function getVisitorTrackingSecret(): string | null {
+  const secret = process.env.VISITOR_TRACKING_SECRET?.trim();
+
+  return secret && secret.length > 0 ? secret : null;
 }
 
 function shouldTrackRequest(request: NextRequest): boolean {
@@ -136,7 +144,9 @@ function createVisitorPayload(request: NextRequest): VisitorPayload {
 }
 
 export function proxy(request: NextRequest, event: NextFetchEvent) {
-  if (shouldTrackRequest(request)) {
+  const visitorTrackingSecret = getVisitorTrackingSecret();
+
+  if (visitorTrackingSecret && shouldTrackRequest(request)) {
     const visitorUrl = new URL("/api/visitor", request.url);
     const payload = createVisitorPayload(request);
 
@@ -145,6 +155,7 @@ export function proxy(request: NextRequest, event: NextFetchEvent) {
         method: "POST",
         headers: {
           "content-type": "application/json",
+          [VISITOR_TRACKING_SECRET_HEADER]: visitorTrackingSecret,
         },
         body: JSON.stringify(payload),
         cache: "no-store",

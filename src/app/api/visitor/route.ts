@@ -2,13 +2,78 @@ import crypto from "node:crypto";
 
 import { NextResponse, type NextRequest } from "next/server";
 
-import { formatThaiDateTimeString, getCurrentDate } from "@/lib/date-time";
-import { getMongoDatabase } from "@/lib/mongodb";
+import {
+  saveVisitorEvent,
+  type VisitorEventInput,
+} from "@/lib/visitor-tracking";
 
 export const runtime = "nodejs";
 
-type VisitorPayload = {
+const VISITOR_TRACKING_SECRET_HEADER = "x-visitor-tracking-secret";
+
+type ParsedVisitorPayload = VisitorEventInput;
+
+type VisitorSecretValidationResult =
+  | { ok: true }
+  | { ok: false; response: NextResponse };
+
+type VisitorTrackingSecretStatus =
+  | { configured: true; secret: string }
+  | { configured: false };
+
+type JsonObject = Record<string, unknown>;
+
+function getVisitorTrackingSecret(): VisitorTrackingSecretStatus {
+  const secret = process.env.VISITOR_TRACKING_SECRET?.trim();
+
+  if (!secret) {
+    return { configured: false };
+  }
+
+  return { configured: true, secret };
+}
+
+function secretsMatch(providedSecret: string, expectedSecret: string): boolean {
+  const provided = Buffer.from(providedSecret, "utf8");
+  const expected = Buffer.from(expectedSecret, "utf8");
+
+  if (provided.length !== expected.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(provided, expected);
+}
+
+function validateVisitorTrackingSecret(
+  request: NextRequest,
+): VisitorSecretValidationResult {
+  const secretStatus = getVisitorTrackingSecret();
+
+  if (!secretStatus.configured) {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { error: "Visitor tracking secret is not configured." },
+        { status: 500 },
+      ),
+    };
+  }
+
+  const providedSecret = request.headers.get(VISITOR_TRACKING_SECRET_HEADER);
+
+  if (!providedSecret || !secretsMatch(providedSecret, secretStatus.secret)) {
+    return {
+      ok: false,
+      response: NextResponse.json({ error: "Unauthorized." }, { status: 401 }),
+    };
+  }
+
+  return { ok: true };
+}
+
+type VisitorRequestPayload = {
   pathname: string;
+  slug: string[];
   ip: string | null;
   userAgent: string | null;
   referer: string | null;
@@ -19,28 +84,13 @@ type VisitorPayload = {
   longitude: string | null;
 };
 
-type VisitorEventDocument = {
-  pathname: string;
-  ipHash: string;
-  userAgent: string | null;
-  referer: string | null;
-  country: string | null;
-  city: string | null;
-  region: string | null;
-  latitude: string | null;
-  longitude: string | null;
-  createdAt: string;
-};
-
-type JsonObject = Record<string, unknown>;
-
 function isJsonObject(value: unknown): value is JsonObject {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function readNullableString(
   body: JsonObject,
-  key: keyof VisitorPayload,
+  key: keyof VisitorRequestPayload,
 ): string | null | undefined {
   const value = body[key];
 
@@ -69,7 +119,7 @@ function readSlug(value: unknown): string[] | null {
   return value;
 }
 
-function parseVisitorPayload(body: unknown): VisitorPayload | null {
+function parseVisitorPayload(body: unknown): ParsedVisitorPayload | null {
   if (!isJsonObject(body)) {
     return null;
   }
@@ -116,14 +166,13 @@ function parseVisitorPayload(body: unknown): VisitorPayload | null {
   };
 }
 
-function hashIp(ip: string | null): string {
-  return crypto
-    .createHash("sha256")
-    .update(ip ?? "unknown")
-    .digest("hex");
-}
-
 export async function POST(request: NextRequest) {
+  const secretValidation = validateVisitorTrackingSecret(request);
+
+  if (!secretValidation.ok) {
+    return secretValidation.response;
+  }
+
   let body: unknown;
 
   try {
@@ -141,24 +190,8 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const document: VisitorEventDocument = {
-    pathname: payload.pathname,
-    ipHash: hashIp(payload.ip),
-    userAgent: payload.userAgent,
-    referer: payload.referer,
-    country: payload.country,
-    city: payload.city,
-    region: payload.region,
-    latitude: payload.latitude,
-    longitude: payload.longitude,
-    createdAt: formatThaiDateTimeString(getCurrentDate()),
-  };
-
   try {
-    const db = await getMongoDatabase();
-    await db
-      .collection<VisitorEventDocument>("visitor_events")
-      .insertOne(document);
+    await saveVisitorEvent(payload);
 
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch {

@@ -72,6 +72,7 @@ Useful local docs:
 
 - Next 16 uses `src/proxy.ts`, not middleware.
 - `proxy.ts` queues visitor tracking with `event.waitUntil()` and posts to `/api/visitor`.
+- Set `VISITOR_TRACKING_SECRET` so `proxy.ts` can authenticate requests to `/api/visitor`; tracking is skipped when it is missing.
 - Keep tracking non-blocking and avoid tracking static assets, auth APIs, visitor APIs, prefetches, and `/th` routes unless requirements change.
 
 ## UI And Styling
