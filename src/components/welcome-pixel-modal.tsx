@@ -15,7 +15,9 @@ import {
 const pathChips = [
   "/th/structure",
   "/th/heart",
-  "/th/logo",
+  "/th/model/logo",
+  "/th/model/robot",
+  "/th/model/dino",
   "/th/RobotDragGame",
 ] as const satisfies readonly Route[];
 
@@ -240,7 +242,7 @@ export function WelcomePixelModal() {
               variants={getPieceVariants(2, entranceOffsets)}
             >
               You can access every path here and enjoy the web app, private
-              rooms, robot game, heart page, logo page, and project structure.
+              rooms, robot game, heart page, model pages, and project structure.
             </motion.p>
 
             <motion.div

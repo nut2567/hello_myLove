@@ -34,7 +34,7 @@ export function SiteShell({ children }: SiteShellProps) {
             <Link className="pixel-shell-link" href="/th/heart">
               Heart
             </Link>
-            <Link className="pixel-shell-link" href="/th/logo">
+            <Link className="pixel-shell-link" href="/th/model/logo">
               Logo
             </Link>
             <Link className="pixel-shell-link" href="/th/RobotDragGame">
