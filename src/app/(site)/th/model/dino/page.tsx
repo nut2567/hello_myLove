@@ -2,6 +2,8 @@
 
 import dynamic from "next/dynamic";
 
+import { ModelBackLink } from "@/components/model-viewer/model-back-link";
+
 const PrototypeModelScene = dynamic(
   () => import("@/components/model-viewer/PrototypeModelScene"),
   {
@@ -13,5 +15,10 @@ const PrototypeModelScene = dynamic(
 );
 
 export default function DinoModelPage() {
-  return <PrototypeModelScene model="dino" />;
+  return (
+    <div className="relative">
+      <ModelBackLink />
+      <PrototypeModelScene model="dino" />
+    </div>
+  );
 }

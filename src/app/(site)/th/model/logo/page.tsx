@@ -2,6 +2,8 @@
 
 import dynamic from "next/dynamic";
 
+import { ModelBackLink } from "@/components/model-viewer/model-back-link";
+
 const ShipScene = dynamic(() => import("@/components/ShipScene"), {
   loading: function ShipSceneFallback() {
     return <div aria-hidden="true" className="h-dvh w-full" />;
@@ -10,5 +12,10 @@ const ShipScene = dynamic(() => import("@/components/ShipScene"), {
 });
 
 export default function ModelLogoPage() {
-  return <ShipScene />;
+  return (
+    <div className="relative">
+      <ModelBackLink />
+      <ShipScene />
+    </div>
+  );
 }
