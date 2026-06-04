@@ -308,6 +308,11 @@ body {
   color: #000;
 }
 
+.pixel-chip[aria-current="true"] {
+  background: var(--pixel-cyan);
+  color: #000;
+}
+
 .pixel-cursor {
   animation: pixelBlink 900ms steps(2, end) infinite;
 }

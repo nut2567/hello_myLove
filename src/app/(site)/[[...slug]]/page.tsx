@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 
 import { auth, signIn } from "@/auth";
+import { HomeSlideWrapper } from "@/components/home/home-slide-wrapper";
 import { PathAccessForm } from "@/components/path-access-form";
 import { WelcomePixelModal } from "@/components/welcome-pixel-modal";
 import {
@@ -328,7 +329,9 @@ export default async function CatchAllPage({
     return (
       <>
         <WelcomePixelModal />
-        <PathAccessForm action={unlockSubmittedPath} />
+        <HomeSlideWrapper>
+          <PathAccessForm action={unlockSubmittedPath} />
+        </HomeSlideWrapper>
       </>
     );
   }
