@@ -75,6 +75,17 @@ body {
   letter-spacing: 0;
 }
 
+a[href],
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
+button:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
 .pixel-app-shell {
   background: transparent;
   color: var(--foreground);
@@ -97,6 +108,7 @@ body {
 
 .pixel-shell-link {
   color: var(--foreground);
+  cursor: pointer;
   font-weight: 900;
   text-transform: uppercase;
   transition:
@@ -254,6 +266,7 @@ body {
   border-style: solid;
   border-color: var(--border);
   box-shadow: 6px 6px 0 var(--pixel-shadow);
+  cursor: pointer;
   display: inline-flex;
   font-family: var(--font-geist-mono), "Courier New", monospace;
   font-weight: 900;
@@ -306,6 +319,48 @@ body {
 .pixel-chip:hover {
   background: var(--pixel-cyan);
   color: #000;
+}
+
+.home-swiper {
+  cursor: grab;
+  overflow: hidden;
+}
+
+.home-swiper:active {
+  cursor: grabbing;
+}
+
+.home-swiper .swiper-wrapper {
+  display: flex;
+  height: 100%;
+  transition-property: transform;
+  width: 100%;
+}
+
+.home-swiper .swiper-slide {
+  flex-shrink: 0;
+  height: auto;
+  position: relative;
+  width: 100%;
+}
+
+.home-swiper a,
+.home-swiper button {
+  cursor: pointer;
+}
+
+.home-swiper input,
+.home-swiper textarea {
+  cursor: text;
+}
+
+.home-swiper .swiper-notification {
+  clip: rect(0, 0, 0, 0);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
 }
 
 .pixel-chip[aria-current="true"] {
