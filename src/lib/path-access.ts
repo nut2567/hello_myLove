@@ -1,12 +1,14 @@
 import "server-only";
 
+import type { ObjectId } from "mongodb";
 import { getCurrentThaiDateTimeString } from "@/lib/date-time";
 import { getMongoClient } from "@/lib/mongodb";
+import { reservePathAccessAttempt } from "@/lib/path-access-throttle";
+import { hashPathPin, isPathPinHash, matchesLegacyPin, verifyPathPin } from "@/lib/path-password";
 
 const USER_COLLECTION_NAME = "user";
 const NEW_USER_COLLECTION_NAME = "newUser";
 const EXISTING_USER_LOG_COLLECTION_NAME = "logOnUser";
-const MAX_WRONG_PASSWORD_LOGS = 50;
 
 export type PathLink = {
   url: string;
@@ -22,21 +24,24 @@ export type PublicPathUser = {
 type PathUserDocument = {
   name?: unknown;
   pin?: unknown;
+  pinHash?: unknown;
   type?: unknown;
   music?: unknown;
+  sessionId?: unknown;
 };
 
 type PathUserQuery = {
   name: string;
-  pin?: string;
 };
 
 export function getDatabaseName(): string {
   return process.env.DATABASE_NAME ?? "port";
 }
 type NewPathRequestDocument = {
+  _id?: string | ObjectId;
   path: string;
-  pin: string;
+  pin?: unknown;
+  pinHash?: unknown;
   createdAt: string;
   lastPinChangedAtThai: string | null;
   pinChangeCount: number;
@@ -49,7 +54,6 @@ type ExistingPathUserLogDocument = {
   visitCount: number;
   successCount: number;
   wrongPasswordCount: number;
-  wrongpass: string[];
   firstVisitedAtThai: string;
   latestVisitedAtThai: string;
   updatedAt: string;
@@ -159,11 +163,42 @@ export async function getPathUserByName(
 export async function getPathUserByCredentials({
   name,
   pin,
+}: { name: string; pin: string }): Promise<PublicPathUser | null> {
+  return (await getPathCredentialIdentity({ name, pin }))?.user ?? null;
+}
+
+export async function getPathCredentialIdentity({
+  name,
+  pin,
 }: {
   name: string;
   pin: string;
-}): Promise<PublicPathUser | null> {
-  return findPathUser({ name, pin });
+}): Promise<{ user: PublicPathUser; sessionId: string } | null> {
+  const client = await getMongoClient();
+  const collection = client.db(getDatabaseName()).collection<PathUserDocument>(USER_COLLECTION_NAME);
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const document = await collection.findOne({ name }, {
+      projection: { name: 1, type: 1, music: 1, pin: 1, pinHash: 1, sessionId: 1 },
+    });
+    if (!document) return null;
+    const user = toPublicPathUser(document);
+    if (!user) return null;
+    const identity = { user, sessionId: typeof document.sessionId === "string" ? document.sessionId : String(document._id) };
+    if (document.pinHash !== undefined) {
+      return await verifyPathPin(document.pinHash, pin) ? identity : null;
+    }
+    if (!matchesLegacyPin(document.pin, pin)) return null;
+
+    // Upgrade a legacy credential atomically without overwriting a concurrent password change.
+    const pinHash = await hashPathPin(pin);
+    const result = await collection.updateOne(
+      { _id: document._id, pin: { $eq: document.pin }, pinHash: { $exists: false } },
+      { $set: { pinHash }, $unset: { pin: "" } },
+    );
+    if (result.matchedCount > 0) return identity;
+  }
+  return null;
 }
 
 export async function upsertNewPathRequest({
@@ -175,51 +210,64 @@ export async function upsertNewPathRequest({
 }): Promise<void> {
   const client = await getMongoClient();
   const nowThai = getCurrentThaiDateTimeString();
-  const pinChangedExpression = {
-    $and: [{ $ne: [{ $type: "$pin" }, "missing"] }, { $ne: ["$pin", pin] }],
-  };
+  const collection = client.db(getDatabaseName()).collection<NewPathRequestDocument>(NEW_USER_COLLECTION_NAME);
 
-  await client
-    .db(getDatabaseName())
-    .collection<NewPathRequestDocument>(NEW_USER_COLLECTION_NAME)
-    .updateOne(
-      { path: name },
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const previous = await collection.findOne({ path: name });
+    if (previous?.pinHash !== undefined && !isPathPinHash(previous.pinHash)) {
+      throw new Error("Stored path request credential is invalid.");
+    }
+    const samePin = previous?.pinHash !== undefined
+      ? await verifyPathPin(previous.pinHash, pin)
+      : matchesLegacyPin(previous?.pin, pin);
+    const pinHash = samePin && isPathPinHash(previous?.pinHash)
+      ? previous.pinHash
+      : await hashPathPin(pin);
+
+    if (!previous) {
+      const result = await collection.updateOne(
+        { _id: name },
+        { $setOnInsert: {
+          path: name, pinHash, createdAt: nowThai, updatedAt: nowThai,
+          pinChangeCount: 0, lastPinChangedAtThai: null,
+        } },
+        { upsert: true },
+      );
+      if (result.upsertedCount > 0) return;
+      continue;
+    }
+
+    const hadPin = previous.pinHash !== undefined || typeof previous.pin === "string";
+    const changed = hadPin && !samePin;
+    const result = await collection.updateOne(
+      {
+        _id: previous._id,
+        pinHash: previous.pinHash === undefined ? { $exists: false } : { $eq: previous.pinHash },
+        pin: previous.pin === undefined ? { $exists: false } : { $eq: previous.pin },
+      },
       [
-        {
-          $set: {
-            path: name,
-            pin,
-            createdAt: { $ifNull: ["$createdAtThai", nowThai] },
-            pinChangeCount: {
-              $cond: [
-                pinChangedExpression,
-                { $add: [{ $ifNull: ["$pinChangeCount", 0] }, 1] },
-                { $ifNull: ["$pinChangeCount", 0] },
-              ],
-            },
-            lastPinChangedAtThai: {
-              $cond: [
-                pinChangedExpression,
-                nowThai,
-                { $ifNull: ["$lastPinChangedAtThai", null] },
-              ],
-            },
-            updatedAt: nowThai,
-          },
-        },
+        { $set: {
+          path: name,
+          pinHash: { $literal: pinHash },
+          createdAt: { $ifNull: ["$createdAt", { $ifNull: ["$createdAtThai", nowThai] }] },
+          pinChangeCount: { $add: [{ $ifNull: ["$pinChangeCount", 0] }, changed ? 1 : 0] },
+          lastPinChangedAtThai: changed ? nowThai : { $ifNull: ["$lastPinChangedAtThai", null] },
+          updatedAt: nowThai,
+        } },
+        { $unset: "pin" },
       ],
-      { upsert: true },
     );
+    if (result.matchedCount > 0) return;
+  }
+  throw new Error("Path request changed concurrently; try again.");
 }
 
 export async function logExistingPathUserAccess({
   name,
   passwordCorrect,
-  pin,
 }: {
   name: string;
   passwordCorrect: boolean;
-  pin: string;
 }): Promise<void> {
   const client = await getMongoClient();
   const nowThai = getCurrentThaiDateTimeString();
@@ -248,19 +296,6 @@ export async function logExistingPathUserAccess({
                 passwordCorrect ? 0 : 1,
               ],
             },
-            wrongpass: passwordCorrect
-              ? { $ifNull: ["$wrongpass", []] }
-              : {
-                  $slice: [
-                    {
-                      $concatArrays: [
-                        { $ifNull: ["$wrongpass", []] },
-                        [pin],
-                      ],
-                    },
-                    -MAX_WRONG_PASSWORD_LOGS,
-                  ],
-                },
             firstVisitedAtThai: {
               $ifNull: ["$firstVisitedAtThai", nowThai],
             },
@@ -268,7 +303,38 @@ export async function logExistingPathUserAccess({
             updatedAt: nowThai,
           },
         },
+        { $unset: "wrongpass" },
       ],
       { upsert: true },
     );
+}
+
+export async function authenticatePathUser({
+  name,
+  pin,
+  headers,
+}: {
+  name: string;
+  pin: string;
+  headers: Headers;
+}): Promise<
+  | { status: "authenticated"; user: PublicPathUser; sessionId: string }
+  | { status: "invalid-password" | "request-pending" | "rate-limited" }
+> {
+  const client = await getMongoClient();
+  if (!await reservePathAccessAttempt({ client, databaseName: getDatabaseName(), name, headers })) {
+    return { status: "rate-limited" };
+  }
+  const existingUser = await getPathUserByName(name);
+  if (!existingUser) {
+    await upsertNewPathRequest({ name, pin });
+    return { status: "request-pending" };
+  }
+  const identity = await getPathCredentialIdentity({ name, pin });
+  try {
+    await logExistingPathUserAccess({ name, passwordCorrect: Boolean(identity) });
+  } catch {
+    console.error("Failed to save path access result; no credentials were logged.");
+  }
+  return identity ? { status: "authenticated", ...identity } : { status: "invalid-password" };
 }

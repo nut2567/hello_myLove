@@ -1,19 +1,19 @@
 import { notFound, redirect } from "next/navigation";
+import { CredentialsSignin } from "next-auth";
 
 import { auth, signIn } from "@/auth";
 import { HomeSlideWrapper } from "@/components/home/home-slide-wrapper";
 import { PathAccessForm } from "@/components/path-access-form";
 import { WelcomePixelModal } from "@/components/welcome-pixel-modal";
 import {
-  getPathUserByCredentials,
   getPathUserByName,
-  logExistingPathUserAccess,
   normalizeSlugPathName,
   normalizeSubmittedPathName,
-  upsertNewPathRequest,
   type PathLink,
   type PublicPathUser,
 } from "@/lib/path-access";
+import { normalizePathPin } from "@/lib/path-password";
+import { isPathSessionCurrent } from "@/lib/path-session";
 import Link from "next/link";
 import { ButtonLink } from "@/components/ui/button-link";
 
@@ -26,16 +26,7 @@ type CatchAllPageProps = {
 
 const INVALID_PASSWORD_QUERY_VALUE = "invalid";
 const NEW_PATH_REQUEST_QUERY_VALUE = "notfound";
-
-function readPin(value: FormDataEntryValue | null): string | null {
-  if (typeof value !== "string") {
-    return null;
-  }
-
-  const pin = value.trim();
-
-  return pin.length > 0 ? pin : null;
-}
+const RATE_LIMITED_QUERY_VALUE = "limited";
 
 async function unlockSubmittedPath(formData: FormData) {
   "use server";
@@ -48,44 +39,36 @@ async function unlockSubmittedPath(formData: FormData) {
 
   const session = await auth();
 
-  if (session?.user?.pathName === name) {
+  if (await isPathSessionCurrent(session, name)) {
     redirect(`/${name}`);
   }
 
-  const pin = readPin(formData.get("pin"));
+  const pin = normalizePathPin(formData.get("pin"));
 
   if (!pin) {
     notFound();
   }
 
-  const pathUser = await getPathUserByName(name);
-
-  if (!pathUser) {
-    await upsertNewPathRequest({ name, pin });
-    redirect(`/${name}?request=${NEW_PATH_REQUEST_QUERY_VALUE}`);
-  }
-
-  const credentialUser = await getPathUserByCredentials({ name, pin });
-
+  let failureCode: string | undefined;
   try {
-    await logExistingPathUserAccess({
-      name,
-      passwordCorrect: Boolean(credentialUser),
+    await signIn("path-access", {
+      path: name,
       pin,
+      redirectTo: `/${name}`,
     });
   } catch (error) {
-    console.error("Failed to save existing path user access log.", error);
+    if (!(error instanceof CredentialsSignin)) throw error;
+    failureCode = error.code;
   }
-
-  if (!credentialUser) {
+  if (failureCode === "request-pending") {
+    redirect(`/${name}?request=${NEW_PATH_REQUEST_QUERY_VALUE}`);
+  }
+  if (failureCode === "rate-limited") {
+    redirect(`/${name}?password=${RATE_LIMITED_QUERY_VALUE}`);
+  }
+  if (failureCode) {
     redirect(`/${name}?password=${INVALID_PASSWORD_QUERY_VALUE}`);
   }
-
-  await signIn("path-access", {
-    path: name,
-    pin,
-    redirectTo: `/${name}`,
-  });
 }
 
 function getFirstSearchParam(
@@ -239,8 +222,8 @@ function MissingPathContent({
 
 function PrivatePathContent({ user }: { user: PublicPathUser }) {
   return (
-    <section className="bg-background px-6 py-14 text-foreground">
-      <div className="mx-auto w-full max-w-6xl">
+    <section className="bg-background py-14 text-foreground">
+      <div className="container mx-auto px-6">
         <div className="max-w-3xl">
           <p className="text-sm font-semibold uppercase tracking-normal text-accent">
             Private path
@@ -345,7 +328,7 @@ export default async function CatchAllPage({
         <HomeSlideWrapper>
           <PathAccessForm
             action={unlockSubmittedPath}
-            authenticatedPathName={session?.user?.pathName}
+            authenticatedPathName={session?.user?.pathName && await isPathSessionCurrent(session, session.user.pathName) ? session.user.pathName : null}
           />
         </HomeSlideWrapper>
       </>
@@ -372,7 +355,8 @@ export default async function CatchAllPage({
     return <MissingPathContent name={name} requestSaved={requestSaved} />;
   }
 
-  if (session?.user?.pathName !== name) {
+  if (!await isPathSessionCurrent(session, name)) {
+    const isRateLimited = getFirstSearchParam(resolvedSearchParams, "password") === RATE_LIMITED_QUERY_VALUE;
     const hasInvalidPassword =
       getFirstSearchParam(resolvedSearchParams, "password") ===
       INVALID_PASSWORD_QUERY_VALUE;
@@ -380,11 +364,13 @@ export default async function CatchAllPage({
     return (
       <PathAccessForm
         action={unlockSubmittedPath}
-        authenticatedPathName={session?.user?.pathName}
+        authenticatedPathName={session?.user?.pathName && await isPathSessionCurrent(session, session.user.pathName) ? session.user.pathName : null}
         errorMessage={
-          hasInvalidPassword
-            ? "Password is incorrect. หรืออติดต่อ admin เพื่อขอเข้าถึงหน้านี้ครับ"
-            : undefined
+          isRateLimited
+            ? "ลองเข้าสู่ระบบหลายครั้งเกินไป กรุณารอให้ครบช่วงพัก 15 นาทีแล้วลองใหม่"
+            : hasInvalidPassword
+              ? "Path หรือรหัสไม่ถูกต้อง กรุณาลองใหม่หรือติดต่อ admin"
+              : undefined
         }
         initialModalOpen
         initialPath={name}

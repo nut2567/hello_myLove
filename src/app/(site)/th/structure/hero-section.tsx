@@ -5,7 +5,7 @@ import { updatedAt } from "./structure-data";
 export function HeroSection() {
   return (
     <section className="border-b border-border bg-surface">
-      <div className="mx-auto w-full max-w-6xl px-6 py-14 lg:py-18">
+      <div className="container mx-auto px-6 py-14 lg:py-18">
         <div className="max-w-4xl">
           <p className="inline-flex rounded-md border border-accent/25 bg-accent/10 px-3 py-1 text-sm font-semibold text-accent">
             อัปเดตล่าสุด: {updatedAt}

@@ -14,8 +14,8 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
   }, [error]);
 
   return (
-    <section className="flex flex-1 items-center border-b border-border bg-background px-6 py-16">
-      <div className="mx-auto grid w-full max-w-6xl gap-10 lg:grid-cols-[0.8fr_1fr] lg:items-center">
+    <section className="flex flex-1 items-center border-b border-border bg-background py-16">
+      <div className="container mx-auto grid gap-10 px-6 lg:grid-cols-[0.8fr_1fr] lg:items-center">
         <div>
           <p className="text-sm font-semibold uppercase tracking-normal text-accent">
             Error

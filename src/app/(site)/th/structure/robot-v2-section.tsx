@@ -12,7 +12,7 @@ import { RobotV2TypesSection } from "./robot-v2/robot-v2-types-section";
 export function RobotV2Section() {
   return (
     <section id="robot-v2" className="border-b border-border">
-      <div className="mx-auto w-full max-w-6xl px-6 py-14">
+      <div className="container mx-auto px-6 py-14">
         <RobotV2Overview />
         <RobotV2FileSection />
         <RobotV2TypesSection />

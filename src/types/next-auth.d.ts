@@ -5,12 +5,14 @@ declare module "next-auth" {
     user?: {
       pathName?: string;
       pathType?: string | null;
+      pathSessionId?: string;
     } & DefaultSession["user"];
   }
 
   interface User {
     pathName?: string;
     pathType?: string | null;
+    pathSessionId?: string;
   }
 }
 
@@ -18,5 +20,6 @@ declare module "next-auth/jwt" {
   interface JWT {
     pathName?: string;
     pathType?: string | null;
+    pathSessionId?: string;
   }
 }

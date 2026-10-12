@@ -233,6 +233,101 @@ src/
 
 ## Getting Started
 
+### Path authentication and password storage
+
+Private paths use NextAuth credentials sessions and Argon2id password hashes
+(`m=19456`, `t=2`, `p=1`, random salts). Store credentials in `user.pinHash`;
+public user objects never include credentials. Successful legacy logins upgrade
+an existing plaintext `user.pin` atomically and remove that field.
+
+Missing-path requests store `newUser.pinHash`. Repeating the same password does
+not increment `pinChangeCount`; changing it does. When approving a request,
+copy the encoded hash into `user.pinHash` without recovering or copying a
+plaintext password. `logOnUser` keeps counters and Thai timestamps and never
+stores attempted passwords.
+
+The NextAuth provider limits all credential attempts, including direct auth API
+calls, to 10 per path and 50 per client IP within 15 minutes. MongoDB stores
+atomic counters in `path_access_attempts` with a TTL index, so limits survive
+restarts and work across instances. Proxy deployments must provide trustworthy
+`x-forwarded-for` / `x-real-ip` headers. Unknown IPs share a fallback bucket.
+An existing valid session for the same path bypasses a new credential attempt.
+
+The current local database is `development` via `.env.local`; configure `DATABASE_NAME`
+explicitly for other environments. To migrate existing plaintext credentials
+and remove old `logOnUser.wrongpass` fields, first run a dry run against the
+intended database, then apply:
+
+```bash
+npm run migrate:path-pins -- --dry-run
+npm run migrate:path-pins -- --apply
+```
+
+The migration preserves password values and unrelated metadata, prints only
+counts, refuses unsupported records in its preflight, and uses conditional
+updates to avoid overwriting concurrent changes. It is safe to rerun. Deploy
+the hash-capable application before migrating another environment.
+
+Run the authentication integration tests with `DATABASE_NAME=development` and database
+credentials in `.env.local`:
+
+```bash
+npm run test:auth
+```
+
+Tests use disposable collections prefixed with `codex_auth_test_` inside `development`
+and drop only their own collections afterward. They cover hash verification,
+legacy upgrades, credential-free logs, password-change tracking, migration,
+atomic throttling, direct provider calls, and session reuse/replacement.
+
+### Admin user creation
+
+Open `/admin` and sign in with a separate administrator account. Provision that
+account once from a trusted terminal, explicitly selecting the configured database:
+
+```bash
+npm run create:admin -- --database=development
+```
+
+The command creates `user.name=admin` with `role=admin`, prints a random password
+once, and refuses to overwrite an existing account. It uses the existing database
+configuration; no new environment variables are required. For another environment,
+replace `development` with that environment's `DATABASE_NAME`.
+
+The admin page and all management actions check the current database role;
+normal path users cannot manage users. Removing the admin role immediately blocks
+management actions, including with an existing session. Admin login uses the same
+MongoDB-backed attempt limits and does not create pending requests for unknown names.
+
+The form creates normal users with a normalized path name, an Argon2id password
+hash, optional descriptive `type`, and up to 20 HTTP(S) music/video links with optional
+scores from 0 to 10. New passwords require at least 8 characters. Names `admin`, `api`,
+`th`, and `_next` are reserved. A unique `user.name` index prevents concurrent duplicate
+creation; existing duplicate names must be resolved before provisioning/creation.
+The dashboard summarizes all named accounts, administrators, music/video links,
+and successful logins. The searchable list includes every named account with
+20 entries per page. Stored hashes/passwords are never included in its projection.
+Admin accounts are visible but protected from editing/deletion through this page.
+Management forms cannot change roles.
+
+Normal users can be edited (name, type, music and optional new password). Leaving
+both password fields empty preserves the current password. Password changes revoke
+existing sessions. New accounts receive a random session identity, so deleting and
+recreating a name does not restore access for its old token. Legacy sessions continue
+until the account is reset or removed. Renaming a user changes their private URL
+and revokes existing sessions, including when the old name is later restored;
+historical access/game records remain under their original names.
+
+Every deletion requires the exact target name and the current signed-in admin's
+password. Verification runs on the server with the same MongoDB-backed attempt limits,
+and confirmations are never reusable. Document IDs and revision checks prevent stale
+forms from editing or deleting a replacement/changed account. Deletion removes only
+the user account; historical logs, pending requests, and game records are retained.
+Creating a user sets a new password; it does not approve or copy a pending `newUser`
+request.
+
+### Running locally
+
 Install dependencies and run the development server:
 
 ```bash

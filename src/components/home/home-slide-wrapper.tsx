@@ -1,7 +1,9 @@
 "use client";
 
 import { type ReactNode, useRef, useState } from "react";
+import Link from "next/link";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa6";
+import { MdAdminPanelSettings } from "react-icons/md";
 import { A11y, Keyboard } from "swiper/modules";
 import { Swiper, SwiperSlide, type SwiperClass } from "swiper/react";
 
@@ -12,7 +14,7 @@ type HomeSlideWrapperProps = {
   children: ReactNode;
 };
 
-const slideLabels = ["Access", "Bot", "Next"] as const;
+const slideLabels = ["Access", "Bot", "Admin"] as const;
 
 export function HomeSlideWrapper({ children }: HomeSlideWrapperProps) {
   const swiperRef = useRef<SwiperClass | null>(null);
@@ -75,24 +77,32 @@ export function HomeSlideWrapper({ children }: HomeSlideWrapperProps) {
         </SwiperSlide>
 
         <SwiperSlide className="flex items-center justify-center px-6 py-12">
-          <div className="pixel-panel pixel-scan-panel flex min-h-104 w-full max-w-3xl flex-col justify-center p-8">
-            <p className="text-xs font-black uppercase tracking-normal text-fuchsia-200">
-              Next slide
-            </p>
+          <div className="pixel-panel pixel-scan-panel flex min-h-104 w-full max-w-3xl flex-col items-center justify-center p-6 text-center sm:p-8">
+            <MdAdminPanelSettings
+              aria-hidden
+              className="size-16 text-cyan-200 sm:size-20"
+            />
             <h2 className="mt-5 text-3xl font-black leading-tight tracking-normal text-white sm:text-5xl">
-              More memories, games, and private pages are coming next.
+              จัดการผู้ใช้
             </h2>
-            <p className="mt-6 max-w-2xl text-sm font-bold leading-6 text-zinc-100 sm:text-base">
-              This space is ready for the next update. Add a gallery, a new
-              mini-game, a message wall, or any special content without leaving
-              the home slide wrapper empty.
+            <p className="mt-5 max-w-xl text-sm font-bold leading-6 text-zinc-100 sm:text-base">
+              สร้างผู้ใช้ ตั้งรหัสผ่าน และเพิ่มเพลงหรือวิดีโอสำหรับหน้าเฉพาะของผู้ใช้
+              ด้วยบัญชี admin
             </p>
+            <Link
+              className="pixel-button mt-8 min-h-12 gap-2 px-5 py-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-200"
+              href="/admin"
+              prefetch={false}
+            >
+              <MdAdminPanelSettings aria-hidden className="size-5 shrink-0" />
+              เข้าหน้า admin
+            </Link>
           </div>
         </SwiperSlide>
       </Swiper>
 
-      <div className="border-t-4 border-border bg-black/50 px-6 py-4 mt-auto">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4">
+      <div className="border-t-4 border-border bg-black/50 py-4 mt-auto">
+        <div className="container mx-auto flex items-center justify-between gap-4 px-6">
           <button
             aria-label="Previous slide"
             className="pixel-button-secondary size-11 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-fuchsia-200"

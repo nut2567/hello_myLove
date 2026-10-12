@@ -4,7 +4,7 @@ import { SectionHeading } from "./structure-ui";
 export function StackSection() {
   return (
     <section className="border-b border-border">
-            <div className="mx-auto w-full max-w-6xl px-6 py-14">
+            <div className="container mx-auto px-6 py-14">
               <SectionHeading eyebrow="Stack" title="เทคโนโลยีที่ใช้อยู่ตอนนี้">
                 โปรเจกต์ยังเป็น Next.js App Router แต่ส่วนเกม 3D แยกเป็น Client
                 Component เพราะต้องใช้ WebGL, animation frame และ pointer event.

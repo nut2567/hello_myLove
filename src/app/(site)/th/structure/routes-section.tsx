@@ -4,7 +4,7 @@ import { InlineCode, SectionHeading } from "./structure-ui";
 export function RoutesSection() {
   return (
     <section className="border-b border-border bg-muted">
-            <div className="mx-auto grid w-full max-w-6xl gap-8 px-6 py-14 lg:grid-cols-[0.85fr_1fr] lg:items-start">
+            <div className="container mx-auto grid gap-8 px-6 py-14 lg:grid-cols-[0.85fr_1fr] lg:items-start">
               <SectionHeading eyebrow="Routes" title="เส้นทางหน้าหลักที่มีในระบบ">
                 route ภาษาไทยอยู่ใต้ <InlineCode>/th</InlineCode> และ route เกมใช้
                 dynamic import เพื่อให้โหลดเฉพาะฝั่ง browser.

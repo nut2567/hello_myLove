@@ -52,6 +52,11 @@ Useful local docs:
 - Path access is implemented in `src/lib/path-access.ts`, `src/auth.ts`, and `src/app/(site)/[[...slug]]/page.tsx`.
 - Path names are normalized to a single lowercase segment with letters, numbers, `_`, and `-`.
 - Existing user access logs go to `logOnUser`; missing path requests go to `newUser`.
+- Credentials use Argon2id `pinHash` via `src/lib/path-password.ts`. Never store raw submitted passwords in documents or logs. Keep hashes out of public user projections.
+- The NextAuth provider is the single credential-check/logging boundary. Preserve MongoDB-backed path/IP throttling and the same-path session shortcut. New-path failures keep the old session.
+- See `README.md` for approval of hashed requests, migration commands, and `npm run test:auth` integration tests in disposable `development` collections.
+- `/admin` uses a separate `admin-access` credentials provider. Check `user.role=admin` from the database on the page and each creation action; never infer privileges from `type` or a client-supplied role. Provision the first admin via `npm run create:admin -- --database=<DATABASE_NAME>`.
+- Admin edit/delete use document identity and revision checks. Each deletion verifies the exact user name and the current admin password with throttling. Protect admin accounts; preserve audit/game history. Password resets rotate `sessionId`, and auth/private-path guards must reject stale sessions.
 
 ## Heart Game
 
