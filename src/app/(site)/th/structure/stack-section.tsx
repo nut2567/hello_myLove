@@ -1,3 +1,6 @@
+
+import { TranslatedText } from "@/components/translated-text";
+
 import { currentStack } from "./structure-data";
 import { SectionHeading } from "./structure-ui";
 
@@ -5,10 +8,7 @@ export function StackSection() {
   return (
     <section className="border-b border-border">
             <div className="container mx-auto px-6 py-14">
-              <SectionHeading eyebrow="Stack" title="เทคโนโลยีที่ใช้อยู่ตอนนี้">
-                โปรเจกต์ยังเป็น Next.js App Router แต่ส่วนเกม 3D แยกเป็น Client
-                Component เพราะต้องใช้ WebGL, animation frame และ pointer event.
-              </SectionHeading>
+              <SectionHeading eyebrow="Structure.stack" title="Structure.currentTechnologyStack"><TranslatedText messageKey={"Structure.theProjectUsesNextJsAppRouterThe3DGame"} /></SectionHeading>
     
               <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {currentStack.map((item) => (
@@ -25,7 +25,7 @@ export function StackSection() {
                       </span>
                     </div>
                     <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                      {item.detail}
+                      <TranslatedText messageKey={item.detail} />
                     </p>
                   </article>
                 ))}

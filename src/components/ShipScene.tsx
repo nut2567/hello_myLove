@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import {
   Center,
   ContactShadows,
@@ -451,8 +453,9 @@ const logoVersions = {
 const ActiveLogo = logoVersions.v2;
 
 export default function ShipScene() {
+  const t = useTranslations();
   return (
-    <div aria-label="Interactive 3D NMC logo" className="h-dvh w-full">
+    <div aria-label={t("Logo.interactive3DNMCLogo")} className="h-dvh w-full">
       <Canvas
         camera={{ fov: 38, position: [0, 0.2, 7.7] }}
         dpr={[1, 2]}

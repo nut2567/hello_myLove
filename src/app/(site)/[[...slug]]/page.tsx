@@ -1,3 +1,6 @@
+
+import { TranslatedText } from "@/components/translated-text";
+
 import { notFound, redirect } from "next/navigation";
 import { CredentialsSignin } from "next-auth";
 
@@ -195,26 +198,19 @@ function MissingPathContent({
   return (
     <section className="flex flex-1 items-center justify-center bg-background px-6 py-14 text-foreground">
       <div className="w-full max-w-2xl rounded-xl border border-border bg-surface p-8 shadow-soft">
-        <p className="text-sm font-semibold uppercase tracking-normal text-accent">
-          Page not found
-        </p>
-        <h1 className="mt-4 text-3xl font-semibold tracking-normal text-foreground sm:text-4xl">
-          ยังไม่พบหน้า /{name}
+        <p className="text-sm font-semibold uppercase tracking-normal text-accent"><TranslatedText messageKey={"PathAccess.pageNotFound"} /></p>
+        <h1 className="mt-4 text-3xl font-semibold tracking-normal text-foreground sm:text-4xl"><TranslatedText messageKey={"PathAccess.pageNotFound2"} />{name}
         </h1>
         <p className="mt-5 text-base leading-7 text-muted-foreground">
-          {"ยังไม่มี path นี้ กำลังพัฒนารอสักครู่นะครับ แล้วกลับมาใหม่"}
+          <TranslatedText messageKey={"PathAccess.thisPathIsNotAvailableYetPleaseCheckBackLater"} />
         </p>
         {requestSaved ? (
-          <p className="mt-4 text-sm font-semibold text-accent">
-            Request saved for this path.
-          </p>
+          <p className="mt-4 text-sm font-semibold text-accent"><TranslatedText messageKey={"PathAccess.requestSavedForThisPath"} /></p>
         ) : null}
         <Link
           className="mt-8 inline-flex h-11 items-center justify-center rounded-md border border-accent bg-accent px-5 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent/90"
           href="/"
-        >
-          กลับไปหน้าแรก
-        </Link>
+        ><TranslatedText messageKey={"Common.goHome"} /></Link>
       </div>
     </section>
   );
@@ -225,9 +221,7 @@ function PrivatePathContent({ user }: { user: PublicPathUser }) {
     <section className="bg-background py-14 text-foreground">
       <div className="container mx-auto px-6">
         <div className="max-w-3xl">
-          <p className="text-sm font-semibold uppercase tracking-normal text-accent">
-            Private path
-          </p>
+          <p className="text-sm font-semibold uppercase tracking-normal text-accent"><TranslatedText messageKey={"Common.privatePath"} /></p>
           {user.type ? (
             <p className="mt-5 text-base leading-7 text-muted-foreground">
               {user.type}
@@ -261,9 +255,7 @@ function PrivatePathContent({ user }: { user: PublicPathUser }) {
                       className="aspect-video w-full bg-background"
                       controls
                     >
-                      <source src={link.url} type={directVideoType} />
-                      Your browser does not support the video tag.
-                    </video>
+                      <source src={link.url} type={directVideoType} /><TranslatedText messageKey={"PathAccess.yourBrowserDoesNotSupportTheVideoTag"} /></video>
                   ) : null}
 
                   <div className="p-5">
@@ -273,7 +265,7 @@ function PrivatePathContent({ user }: { user: PublicPathUser }) {
                           {getLinkTitle(link, index)}
                         </p>
                         <h2 className="mt-3 break-all text-lg font-semibold text-foreground">
-                          {embedUrl || directVideoType ? "Video" : "Open link"}
+                          <TranslatedText messageKey={embedUrl || directVideoType ? "PathAccess.video" : "PathAccess.openLink"} />
                         </h2>
                       </div>
                       {link.rate !== null ? (
@@ -294,9 +286,7 @@ function PrivatePathContent({ user }: { user: PublicPathUser }) {
                         rel="noreferrer"
                         target="_blank"
                         external
-                      >
-                        Open URL
-                      </ButtonLink>
+                      ><TranslatedText messageKey={"PathAccess.openURL"} /></ButtonLink>
                     ) : null}
                   </div>
                 </article>
@@ -304,9 +294,7 @@ function PrivatePathContent({ user }: { user: PublicPathUser }) {
             })}
           </div>
         ) : (
-          <div className="mt-10 rounded-lg border border-border bg-surface p-6 text-muted-foreground shadow-soft">
-            No links are available for this path yet.
-          </div>
+          <div className="mt-10 rounded-lg border border-border bg-surface p-6 text-muted-foreground shadow-soft"><TranslatedText messageKey={"PathAccess.noLinksAreAvailableForThisPathYet"} /></div>
         )}
       </div>
     </section>
@@ -365,11 +353,11 @@ export default async function CatchAllPage({
       <PathAccessForm
         action={unlockSubmittedPath}
         authenticatedPathName={session?.user?.pathName && await isPathSessionCurrent(session, session.user.pathName) ? session.user.pathName : null}
-        errorMessage={
+        errorMessageKey={
           isRateLimited
-            ? "ลองเข้าสู่ระบบหลายครั้งเกินไป กรุณารอให้ครบช่วงพัก 15 นาทีแล้วลองใหม่"
+            ? "PathAccess.tooManySignInAttemptsWaitForThe15Minute"
             : hasInvalidPassword
-              ? "Path หรือรหัสไม่ถูกต้อง กรุณาลองใหม่หรือติดต่อ admin"
+              ? "PathAccess.incorrectPathOrPasswordTryAgainOrContactAnAdmin"
               : undefined
         }
         initialModalOpen

@@ -15,6 +15,45 @@
   --pixel-lime: #bef264;
   --pixel-pink: #f0abfc;
   --pixel-shadow: #374151;
+  --accessibility-font-scale: 1;
+}
+
+:root[data-font-size="small"] { --accessibility-font-scale: 0.875; }
+:root[data-font-size="large"] { --accessibility-font-scale: 1.125; }
+:root[data-font-size="xlarge"] { --accessibility-font-scale: 1.25; }
+
+:root[data-color-theme="sharp1"] {
+  color-scheme: dark;
+  --background: #000;
+  --foreground: #fff;
+  --surface: #000;
+  --muted: #171717;
+  --muted-foreground: #fff;
+  --border: #fff;
+  --accent: #fff;
+  --accent-foreground: #000;
+  --ring: #ffff00;
+  --pixel-cyan: #fff;
+  --pixel-lime: #fff;
+  --pixel-pink: #fff;
+  --pixel-shadow: #fff;
+}
+
+:root[data-color-theme="sharp2"] {
+  color-scheme: light;
+  --background: #fff;
+  --foreground: #000;
+  --surface: #fff;
+  --muted: #f0f0f0;
+  --muted-foreground: #000;
+  --border: #000;
+  --accent: #000;
+  --accent-foreground: #fff;
+  --ring: #0000aa;
+  --pixel-cyan: #000;
+  --pixel-lime: #000;
+  --pixel-pink: #000;
+  --pixel-shadow: #000;
 }
 
 @theme inline {
@@ -45,6 +84,7 @@
 html {
   min-height: 100%;
   background: var(--background);
+  font-size: calc(100% * var(--accessibility-font-scale));
 }
 
 body {
@@ -370,6 +410,90 @@ button:disabled,
 
 .pixel-cursor {
   animation: pixelBlink 900ms steps(2, end) infinite;
+}
+
+.pixel-chip[aria-pressed="true"] {
+  background: var(--pixel-cyan);
+  color: var(--accent-foreground);
+}
+
+.accessibility-controls :focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 4px;
+}
+
+/* The native popover stays above sticky headers and game overlays. */
+.accessibility-popover {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  width: min(20rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.accessibility-popover:popover-open {
+  display: grid;
+}
+
+.accessibility-controls > button[aria-expanded="true"] {
+  outline: 2px solid var(--ring);
+  outline-offset: 4px;
+}
+
+.structure-page {
+  overflow-wrap: anywhere;
+}
+
+.structure-page :is(.grid, article, section) {
+  min-width: 0;
+}
+
+/* Legacy UI uses literal colors too. Media and WebGL retain their rendering. */
+:root:is([data-color-theme="sharp1"], [data-color-theme="sharp2"]) body {
+  background: var(--background);
+}
+:root:is([data-color-theme="sharp1"], [data-color-theme="sharp2"]) :is(
+  [class*="bg-"], .pixel-panel, .pixel-input, .pixel-project-logo, .pixel-shell-bar
+):not(.pixel-robot, .pixel-robot *) {
+  background-color: var(--background) !important;
+  background-image: none !important;
+}
+:root:is([data-color-theme="sharp1"], [data-color-theme="sharp2"]) :is(
+  [class*="text-"], .pixel-panel, .pixel-input, .pixel-project-logo
+) {
+  color: var(--foreground) !important;
+}
+:root:is([data-color-theme="sharp1"], [data-color-theme="sharp2"]) [class*="border"]:not(.pixel-robot, .pixel-robot *) {
+  border-color: var(--border) !important;
+}
+:root:is([data-color-theme="sharp1"], [data-color-theme="sharp2"]) :is(
+  button, select, input, summary, .pixel-chip, .pixel-button, .pixel-button-secondary
+) {
+  background: var(--background) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
+:root:is([data-color-theme="sharp1"], [data-color-theme="sharp2"]) :is(
+  button:hover, summary:hover, [aria-pressed="true"], [aria-current="true"]
+) {
+  background: var(--foreground) !important;
+  color: var(--background) !important;
+}
+:root:is([data-color-theme="sharp1"], [data-color-theme="sharp2"]) input::placeholder {
+  color: var(--foreground);
+  opacity: 0.75;
+}
+:root:is([data-color-theme="sharp1"], [data-color-theme="sharp2"]) a[href] {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+:root:is([data-color-theme="sharp1"], [data-color-theme="sharp2"]) :focus-visible {
+  outline-color: var(--ring) !important;
+}
+:root:is([data-color-theme="sharp1"], [data-color-theme="sharp2"]) .pixel-scan-panel::after {
+  display: none;
 }
 
 .pixel-float {

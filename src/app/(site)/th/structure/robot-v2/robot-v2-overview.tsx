@@ -1,3 +1,6 @@
+
+import { TranslatedText } from "@/components/translated-text";
+
 import { robotGameFiles, v2Flow } from "../structure-data";
 import { InlineCode, SectionHeading } from "../structure-ui";
 
@@ -5,13 +8,9 @@ export function RobotV2Overview() {
   return (
     <>
                     <SectionHeading
-                      eyebrow="Robot Drag Game"
-                      title="สถานะล่าสุดของเกม v1 และ v2"
-                    >
-                      ตอนนี้ไฟล์หลัก <InlineCode>RobotDragGame.tsx</InlineCode>{" "}
-                      ไม่ได้เป็นตัวเกมโดยตรงแล้ว แต่เป็นตัวเลือกเวอร์ชัน ทำให้เก็บของเดิม
-                      และของใหม่ไว้พร้อมกันได้.
-                    </SectionHeading>
+                      eyebrow="Navigation.robotGame"
+                      title="Structure.currentV1AndV2GameStructure"
+                    ><TranslatedText messageKey={"Structure.theMainFile"} after=" " /><InlineCode>RobotDragGame.tsx</InlineCode>{" "}<TranslatedText messageKey={"Structure.nowSelectsTheGameVersionKeepingBothTheOriginalAnd"} /></SectionHeading>
           
                     <div className="mt-8 grid gap-4 lg:grid-cols-3">
                     {robotGameFiles.map((item) => (
@@ -19,12 +18,12 @@ export function RobotV2Overview() {
                           key={item.file}
                           className="rounded-lg border border-border bg-surface p-5 shadow-soft"
                         >
-                          <p className="text-sm font-semibold text-accent">{item.role}</p>
+                          <p className="text-sm font-semibold text-accent"><TranslatedText messageKey={item.role} /></p>
                           <h3 className="mt-3 break-all font-mono text-sm font-semibold text-foreground">
                             {item.file}
                           </h3>
                           <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                            {item.detail}
+                            <TranslatedText messageKey={item.detail} />
                           </p>
                         </article>
                       ))}
@@ -32,21 +31,10 @@ export function RobotV2Overview() {
           
                     <div className="mt-10 grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
                       <div>
-                        <h3 className="text-2xl font-semibold tracking-normal text-foreground">
-                          React Three Fiber คืออะไร
-                        </h3>
-                        <p className="mt-4 text-base leading-7 text-muted-foreground">
-                          React Three Fiber คือ renderer ที่ทำให้เขียน Three.js ด้วย React
-                          ได้ เช่นใช้ <InlineCode>{"<Canvas>"}</InlineCode> เป็นฉาก 3D,
-                          ใช้ <InlineCode>{"<mesh>"}</InlineCode> เป็นวัตถุ และใช้{" "}
-                          <InlineCode>useFrame</InlineCode> เพื่ออัปเดต animation ทุก
-                          frame.
-                        </p>
-                        <p className="mt-4 text-base leading-7 text-muted-foreground">
-                          ใน <InlineCode>RobotDragGameV2.tsx</InlineCode>{" "}
-                          มันถูกใช้เพื่อเปลี่ยนเกมจาก DOM 2D เป็น WebGL 3D โดยยังคง
-                          gameplay เดิมคือการลากหุ่นไปยังเป้าหมาย.
-                        </p>
+                        <h3 className="text-2xl font-semibold tracking-normal text-foreground"><TranslatedText messageKey={"Structure.whatIsReactThreeFiber"} /></h3>
+                        <p className="mt-4 text-base leading-7 text-muted-foreground"><TranslatedText messageKey={"Structure.reactThreeFiberRendersThreeJsWithReactForExample"} after=" " /><InlineCode>{"<Canvas>"}</InlineCode><TranslatedText messageKey={"Structure.forThe3DScene"} before=" " after=" " /><InlineCode>{"<mesh>"}</InlineCode><TranslatedText messageKey={"Structure.forObjectsAnd"} before=" " />{" "}
+                          <InlineCode>useFrame</InlineCode><TranslatedText messageKey={"Structure.toUpdateAnimationsEveryFrame"} before=" " /></p>
+                        <p className="mt-4 text-base leading-7 text-muted-foreground"><TranslatedText messageKey={"Structure.in2"} after=" " /><InlineCode>RobotDragGameV2.tsx</InlineCode>{" "}<TranslatedText messageKey={"Structure.itConvertsThe2DDOMGameIntoWebGL3DWhile"} /></p>
                       </div>
           
                       <ol className="grid gap-3">
@@ -60,7 +48,7 @@ export function RobotV2Overview() {
                                 {index + 1}
                               </span>
                               <p className="text-sm leading-6 text-muted-foreground">
-                                {item}
+                                <TranslatedText messageKey={item} />
                               </p>
                             </div>
                           </li>

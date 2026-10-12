@@ -6,7 +6,7 @@ import { WorkspaceSection } from "./workspace-section";
 
 export default function StructurePage() {
   return (
-    <div className="bg-background text-foreground">
+    <div className="structure-page bg-background text-foreground">
       <HeroSection />
       <StackSection />
       <RoutesSection />

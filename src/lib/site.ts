@@ -1,8 +1,8 @@
 export const siteConfig = {
   name: "Hello Unew",
-  title: "A structured Next 16 app foundation.",
+  title: "Project.aStructuredNext16AppFoundation",
   description:
-    "The starter screen is now split into route, layout, home, UI, and data layers with Tailwind CSS 4 driving the design tokens.",
+    "Project.theStarterScreenIsNowSplitIntoRouteLayoutHome",
   links: {
     nextDocs: "https://nextjs.org/docs",
     tailwindDocs: "https://tailwindcss.com/docs",
@@ -13,39 +13,39 @@ export const stackItems = [
   {
     label: "Next.js",
     value: "16.2.4",
-    detail: "App Router with Turbopack defaults for development and builds.",
+    detail: "Project.appRouterWithTurbopackDefaultsForDevelopmentAndBuilds",
   },
   {
     label: "React",
     value: "19.2.4",
     detail:
-      "Server Components first, with client components added only as needed.",
+      "Project.serverComponentsFirstWithClientComponentsAddedOnlyAsNeeded",
   },
   {
     label: "Tailwind",
     value: "4.2.4",
-    detail: "CSS-first configuration through `@import` and `@theme`.",
+    detail: "Project.cssFirstConfigurationThroughImportAndTheme",
   },
 ] as const;
 
 export const projectPillars = [
   {
-    kicker: "Routing",
-    title: "Route groups",
+    kicker: "Project.routing",
+    title: "Project.routeGroups",
     description:
-      "`src/app/(site)/page.tsx` keeps the public URL at `/` while leaving room for future app sections.",
+      "Project.srcAppSitePageTsxKeepsThePublicURLAt",
   },
   {
-    kicker: "Interface",
-    title: "Shared components",
+    kicker: "Project.interface",
+    title: "Project.sharedComponents",
     description:
-      "Page sections, layout shell, and UI primitives are separated so future screens can reuse them cleanly.",
+      "Project.pageSectionsLayoutShellAndUIPrimitivesAreSeparatedSo",
   },
   {
-    kicker: "Styling",
-    title: "Theme tokens",
+    kicker: "Project.styling",
+    title: "Project.themeTokens",
     description:
-      "Global CSS exposes semantic Tailwind colors like `bg-surface`, `text-muted-foreground`, and `border-border`.",
+      "Project.globalCSSExposesSemanticTailwindColorsLikeBgSurfaceText",
   },
 ] as const;
 

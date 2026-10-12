@@ -1,3 +1,6 @@
+
+import { TranslatedText } from "@/components/translated-text";
+
 import { v2FunctionMap } from "../structure-data";
 import { SectionHeading } from "../structure-ui";
 
@@ -6,12 +9,9 @@ export function RobotV2FunctionsSection() {
     <>
                     <div className="mt-14 grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
                       <SectionHeading
-                        eyebrow="V2 Functions"
-                        title="แผนที่ฟังก์ชันใน RobotDragGameV2.tsx"
-                      >
-                        ส่วนนี้อธิบายเฉพาะ v2 เพื่อให้รู้ว่าควรเข้าไปแก้ตรงไหนก่อน
-                        โดยเฉพาะตอนแยกระหว่างงานวาดโมเดล งานคุมสนาม และงานคุม state เกม.
-                      </SectionHeading>
+                        eyebrow="Structure.v2Functions"
+                        title="Structure.functionMapForRobotDragGameV2Tsx"
+                      ><TranslatedText messageKey={"Structure.thisSectionExplainsWhereToEditV2SeparatingModelRendering"} /></SectionHeading>
           
                       <div className="grid gap-3">
                         {v2FunctionMap.map((item) => (
@@ -21,14 +21,14 @@ export function RobotV2FunctionsSection() {
                           >
                             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                               <h3 className="font-mono text-sm font-semibold text-accent">
-                                {item.name}
+                                <TranslatedText messageKey={item.name} />
                               </h3>
                               <p className="text-sm font-semibold text-foreground">
-                                {item.role}
+                                <TranslatedText messageKey={item.role} />
                               </p>
                             </div>
                             <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                              {item.detail}
+                              <TranslatedText messageKey={item.detail} />
                             </p>
                           </article>
                         ))}

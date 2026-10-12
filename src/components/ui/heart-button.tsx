@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
@@ -197,6 +199,7 @@ export function HeartButton({
   currentHeartId,
   style,
 }: HeartButtonProps) {
+  const t = useTranslations();
   const router = useRouter();
   const dispatch = useHeartGameDispatch();
   const score = useHeartGameSelector((state) => state.heartGame.score);
@@ -231,23 +234,23 @@ export function HeartButton({
     if (cheated) {
       return {
         fileName: "heart-game-loser-score.png",
-        label: "SCORE RESET",
+        label: t("HeartGame.scoreReset"),
         score: 0,
-        title: "LOSER",
+        title: t("HeartGame.loser"),
       };
     }
 
     if (gameOver) {
       return {
         fileName: "heart-game-final-score.png",
-        label: "FINAL SCORE",
+        label: t("HeartGame.finalScore"),
         score: gameOverScore,
-        title: "GAME OVER",
+        title: t("HeartGame.gameOverCard"),
       };
     }
 
     return null;
-  }, [cheated, gameOver, gameOverScore]);
+  }, [cheated, gameOver, gameOverScore, t]);
   const scorePopupImage = useMemo(() => {
     if (!scorePopup || typeof document === "undefined") {
       return "";
@@ -325,8 +328,8 @@ export function HeartButton({
       if (!result.ok) {
         setPlayerSaveError(
           result.reason === "invalid-player-name"
-            ? "Enter a name between 1 and 40 characters."
-            : "Player type is invalid.",
+            ? "HeartGame.enterANameBetween1And40Characters"
+            : "HeartGame.playerTypeIsInvalid",
         );
         return;
       }
@@ -336,7 +339,7 @@ export function HeartButton({
       setPlayerName("");
     } catch (error) {
       console.error("Failed to save heart game player.", error);
-      setPlayerSaveError("Could not save player. Try again.");
+      setPlayerSaveError("HeartGame.couldNotSavePlayerTryAgain");
     } finally {
       setSavingPlayerType(null);
     }
@@ -408,23 +411,21 @@ export function HeartButton({
   const scoreStatus = (
     <div
       aria-live="polite"
-      className="pixel-chip px-3 py-2 text-center text-[11px] leading-tight sm:text-xs"
+      className="pixel-chip px-3 py-2 text-center text-[0.6875rem] leading-tight sm:text-xs"
     >
       {cheated ? (
-        <p className="font-black uppercase text-red-200">
-          You cheated in the game
-        </p>
+        <p className="font-black uppercase text-red-200">{t("HeartGame.youCheatedInTheGame")}</p>
       ) : gameOver ? (
-        <p className="font-black uppercase text-red-200">Game over</p>
+        <p className="font-black uppercase text-red-200">{t("HeartGame.gameOver")}</p>
       ) : (
         // !canPlay ? (
         //   <p className="font-black uppercase text-cyan-200">Choose player</p>
         // ) :
         <div className="flex gap-2 items-center justify-center">
-          <p className="text-[10px] font-black uppercase text-cyan-200">
+          <p className="text-[0.625rem] font-black uppercase text-cyan-200">
             {authenticatedPlayerName ?? activePlayer?.name}
           </p>
-          <p className="font-black uppercase text-lime-200">Score {score}</p>
+          <p className="font-black uppercase text-lime-200">{t("HeartGame.score")}{" "}{score}</p>
         </div>
       )}
     </div>
@@ -437,19 +438,15 @@ export function HeartButton({
       {shouldShowPlayerPopup
         ? createPortal(
             <div
-              aria-label="Choose heart game player"
+              aria-label={t("HeartGame.chooseHeartGamePlayer")}
               aria-modal="true"
               className="fixed inset-0 z-[60] grid place-items-center bg-black/75 px-5 backdrop-blur-sm"
               role="dialog"
             >
               <div className="pixel-panel pixel-panel-boot grid w-full max-w-md gap-5 p-5">
                 <div className="grid gap-2">
-                  <p className="text-xs font-black uppercase text-cyan-200">
-                    Heart game player
-                  </p>
-                  <h2 className="text-2xl font-black uppercase text-lime-200">
-                    Who is playing?
-                  </h2>
+                  <p className="text-xs font-black uppercase text-cyan-200">{t("HeartGame.heartGamePlayer")}</p>
+                  <h2 className="text-2xl font-black uppercase text-lime-200">{t("HeartGame.choosePlayer")}</h2>
                 </div>
 
                 <button
@@ -458,18 +455,14 @@ export function HeartButton({
                   onClick={playAsGuest}
                   type="button"
                 >
-                  {savingPlayerType === "guest"
-                    ? "Saving guest"
-                    : "Play as guest"}
+                  {t(savingPlayerType === "guest" ? "HeartGame.savingGuest" : "HeartGame.playAsGuest")}
                 </button>
 
                 <form className="grid gap-3" onSubmit={submitPlayerName}>
                   <label
                     className="text-xs font-black uppercase text-cyan-100"
                     htmlFor="heart-game-player-name"
-                  >
-                    Or enter your name
-                  </label>
+                  >{t("HeartGame.orEnterYourName")}</label>
                   <input
                     autoComplete="nickname"
                     className="pixel-input h-12 w-full px-3 text-sm"
@@ -477,13 +470,13 @@ export function HeartButton({
                     id="heart-game-player-name"
                     maxLength={40}
                     onChange={(event) => setPlayerName(event.target.value)}
-                    placeholder="Player name"
+                    placeholder={t("HeartGame.playerName")}
                     type="text"
                     value={playerName}
                   />
                   {playerSaveError ? (
                     <p className="text-xs font-black uppercase text-red-200">
-                      {playerSaveError}
+                      {t(playerSaveError)}
                     </p>
                   ) : null}
                   <button
@@ -494,9 +487,7 @@ export function HeartButton({
                     }
                     type="submit"
                   >
-                    {savingPlayerType === "named"
-                      ? "Saving player"
-                      : "Start with name"}
+                    {t(savingPlayerType === "named" ? "HeartGame.savingPlayer" : "HeartGame.startWithName")}
                   </button>
                 </form>
               </div>
@@ -516,7 +507,7 @@ export function HeartButton({
               <PixelFireworks active={gameOver} anchorCount={8} />
               <div className="pixel-panel relative z-10 grid max-w-xl gap-4 p-4">
                 <Image
-                  alt={`${scorePopup.title} score card`}
+                  alt={`${scorePopup.title} ${t("HeartGame.scoreCard")}`}
                   className="w-full max-w-[520px] border-4 border-cyan-300"
                   draggable={false}
                   height={320}
@@ -529,16 +520,12 @@ export function HeartButton({
                     className="pixel-chip px-4 py-3 text-sm font-black uppercase text-cyan-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-200"
                     onClick={downloadScoreImage}
                     type="button"
-                  >
-                    Download image
-                  </button>
+                  >{t("HeartGame.downloadImage")}</button>
                   <button
                     className="pixel-chip px-4 py-3 text-sm font-black uppercase text-lime-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-200"
                     onClick={closeScorePopup}
                     type="button"
-                  >
-                    Play again
-                  </button>
+                  >{t("Common.playAgain")}</button>
                 </div>
               </div>
             </div>,
@@ -548,7 +535,7 @@ export function HeartButton({
 
       {fakeHearts.map((fakeHeart) => (
         <motion.button
-          aria-label="Fake heart ends the game"
+          aria-label={t("HeartGame.fakeHeartEndsTheGame")}
           animate={{
             opacity: [0.55, 1],
             scale: [0.78, 0.9],

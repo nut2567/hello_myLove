@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import Link from "next/link";
 import type { Route } from "next";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
@@ -15,10 +17,10 @@ import {
 } from "@/lib/date-time";
 
 const pageShortcuts = [
-  { href: "/th/structure", label: "Project structure", icon: MdAccountTree },
-  { href: "/th/heart", label: "Heart game", icon: MdFavorite },
-  { href: "/th/logo", label: "Project logo", icon: MdImage },
-  { href: "/th/RobotDragGame", label: "Robot game", icon: MdSmartToy },
+  { href: "/th/structure", label: "Welcome.structure", icon: MdAccountTree },
+  { href: "/th/heart", label: "Welcome.heart", icon: MdFavorite },
+  { href: "/th/logo", label: "Welcome.logo", icon: MdImage },
+  { href: "/th/RobotDragGame", label: "Welcome.robotGame", icon: MdSmartToy },
 ] as const satisfies readonly { href: Route; label: string; icon: IconType }[];
 
 const WELCOME_COOKIE_NAME = "welcome_pixel_hidden_until";
@@ -135,6 +137,7 @@ function subscribeToWelcomeCookie(onStoreChange: () => void) {
 }
 
 export function WelcomePixelModal() {
+  const t = useTranslations();
   const shouldShowFromCookie = useSyncExternalStore(
     subscribeToWelcomeCookie,
     getWelcomeModalSnapshot,
@@ -223,16 +226,14 @@ export function WelcomePixelModal() {
                 />
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-bold uppercase tracking-normal text-cyan-200">
-                  Pixel system online
-                </p>
+                <p className="text-xs font-bold uppercase tracking-normal text-cyan-200">{t("Welcome.pixelSystemOnline")}</p>
                 <h2
                   className="mt-3 text-3xl font-black leading-tight tracking-normal text-white"
                   id="welcome-pixel-title"
                 >
                   <TypewriterText
                     cursorClassName="pixel-cursor text-lime-300"
-                    text="Welcome to my project webapp"
+                    text={t("Welcome.title")}
                   />
                 </h2>
               </div>
@@ -241,13 +242,10 @@ export function WelcomePixelModal() {
             <motion.p
               className="mt-5 border-y-4 border-white/80 py-4 text-sm font-bold leading-6 text-zinc-100"
               variants={getPieceVariants(2, entranceOffsets)}
-            >
-              Choose a page below to explore the project, play games, or view
-              the logo. You can also visit your private room from the home page.
-            </motion.p>
+            >{t("Welcome.chooseAPageBelowToExploreTheProjectPlayGames")}</motion.p>
 
             <motion.div
-              aria-label="Explore pages"
+              aria-label={t("Welcome.explorePages")}
               className="mt-5 grid gap-2 sm:grid-cols-2"
               variants={getPieceVariants(3, entranceOffsets)}
             >
@@ -258,7 +256,7 @@ export function WelcomePixelModal() {
                   key={href}
                 >
                   <Icon aria-hidden="true" className="size-6 shrink-0" />
-                  <span>{label}</span>
+                  <span>{t(label)}</span>
                 </Link>
               ))}
             </motion.div>
@@ -272,9 +270,7 @@ export function WelcomePixelModal() {
                 onClick={closeModal}
                 ref={startButtonRef}
                 type="button"
-              >
-                Start explore
-              </button>
+              >{t("Welcome.startExplore")}</button>
             </motion.div>
 
             <motion.label
@@ -286,9 +282,7 @@ export function WelcomePixelModal() {
                 className="size-5 accent-lime-300"
                 onChange={(event) => setRememberToday(event.target.checked)}
                 type="checkbox"
-              />
-              Don&apos;t show again today
-            </motion.label>
+              />{t("Welcome.donTShowAgainToday")}</motion.label>
           </motion.div>
         </motion.div>
       ) : null}

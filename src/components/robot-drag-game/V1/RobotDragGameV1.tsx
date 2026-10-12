@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useEffect, useRef, useState, type PointerEvent } from "react";
 
 import { PixelRobot } from "@/components/robot-drag-game/V1/PixelRobot";
@@ -59,12 +61,12 @@ const EVASIVE_ROBOT_IDS = new Set<RobotId>(["pixel"]);
 const EVASION_RADIUS = 132;
 const EVASION_SPEED = 12.5;
 const HARD_CATCHABLE_DURATION = 5000;
-const SPEECH_TEXT = "Drag me somewhere... maybe something will happen!";
+const SPEECH_TEXT = "RobotGame.dragMeSomewhereMaybeSomethingWillHappen";
 
 const difficulties: { id: Difficulty; label: string }[] = [
-  { id: "easy", label: "Easy" },
-  { id: "medium", label: "Medium" },
-  { id: "hard", label: "Hard" },
+  { id: "easy", label: "RobotGame.difficulty.easy" },
+  { id: "medium", label: "RobotGame.difficulty.medium" },
+  { id: "hard", label: "RobotGame.difficulty.hard" },
 ];
 
 const robots: Robot[] = [
@@ -294,6 +296,7 @@ function canDragRobot(
 }
 
 export default function RobotDragGameV1() {
+  const t = useTranslations();
   const gameAreaRef = useRef<HTMLDivElement>(null);
   const dragStateRef = useRef<DragState | null>(null);
   const capturedElementRef = useRef<HTMLDivElement | null>(null);
@@ -782,6 +785,7 @@ export default function RobotDragGameV1() {
         {difficulties.map((difficultyOption) => (
           <button
             key={difficultyOption.id}
+                aria-pressed={difficulty === difficultyOption.id}
             className={[
               "px-3 py-2 text-sm font-bold text-white",
               difficulty === difficultyOption.id
@@ -791,7 +795,7 @@ export default function RobotDragGameV1() {
             onClick={() => handleDifficultyChange(difficultyOption.id)}
             type="button"
           >
-            {difficultyOption.label}
+            {t(difficultyOption.label)}
           </button>
         ))}
       </div>
@@ -829,8 +833,8 @@ export default function RobotDragGameV1() {
             }}
           >
             {showSpeech ? (
-              <div className="absolute bottom-full left-1/2 mb-3 w-48 -translate-x-1/2 border-4 border-white bg-black px-3 py-2 font-mono text-[10px] leading-snug text-white shadow-[4px_4px_0_#374151]">
-                {SPEECH_TEXT}
+              <div className="absolute bottom-full left-1/2 mb-3 w-48 -translate-x-1/2 border-4 border-white bg-black px-3 py-2 font-mono text-[0.625rem] leading-snug text-white shadow-[4px_4px_0_#374151]">
+                {t(SPEECH_TEXT)}
                 <div className="absolute -bottom-3 left-1/2 h-3 w-3 -translate-x-1/2 border-b-4 border-r-4 border-white bg-black" />
               </div>
             ) : null}
@@ -848,12 +852,10 @@ export default function RobotDragGameV1() {
         <div className="absolute inset-0 z-30 flex items-center justify-center overflow-hidden bg-black/60">
           <PixelFireworks active={isWin} anchorCount={8} />
           <button
-            className="relative z-10 border-4 border-white bg-black px-8 py-5 font-mono text-5xl font-bold tracking-normal text-white shadow-[8px_8px_0_#22c55e]"
+            className="relative z-10 border-4 border-white bg-black px-8 py-5 max-w-[calc(100vw-3rem)] font-mono text-3xl sm:text-5xl font-bold tracking-normal text-white shadow-[8px_8px_0_#22c55e]"
             onClick={() => restartGame()}
             type="button"
-          >
-            You Win!
-          </button>
+          >{t("RobotGame.youWin")}</button>
         </div>
       ) : null}
     </main>

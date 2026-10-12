@@ -21,6 +21,29 @@ src/
   lib/                 Shared data and configuration
 ```
 
+## ภาษาและการตั้งค่าการอ่าน
+
+เลือก TH / EN และเปิด “ตั้งค่าการอ่าน” จากแถบหลักหรือแถบควบคุมในเกมหุ่นยนต์
+ขนาดตัวอักษรมีเล็ก ปกติ ใหญ่ และใหญ่มาก (87.5%, 100%, 112.5%, 125%)
+ธีมมีปกติ คอนทราสต์พื้นดำ และคอนทราสต์พื้นขาว โดยจำค่าบนเบราว์เซอร์และใช้ร่วมกันทุกหน้า
+การคืนค่าการอ่านจะคืนเฉพาะขนาดตัวอักษรและธีม โดยคงภาษาที่เลือกไว้
+
+- `src/components/ui-preferences-provider.tsx` ครอบแอปและให้ `useUiPreferences()` สำหรับหน้าอื่น
+- `src/lib/ui-preferences.ts` กำหนดชนิดและตรวจค่าที่เก็บใน localStorage
+- `messages/th.json` และ `messages/en.json` เก็บคำแปลแยก namespace เช่น `Navigation`, `Admin`, `HeartGame`, `Structure`
+- `src/i18n/messages.ts` โหลดข้อความให้ `NextIntlClientProvider` ตามภาษาที่จำไว้
+- ใช้ `import { useTranslations } from "next-intl"` ใน Client Components แล้วเรียก
+  `const t = useTranslations("Admin");` และ `t("title")` เหมือนโปรเจกต์ pdmo
+- ใช้ `<TranslatedText messageKey="Common.continue" />` สำหรับข้อความใน Server Components
+  เพื่อให้เปลี่ยนภาษาทันทีโดยไม่ต้องย้ายหน้าไปเป็น Client Component
+- แปลเฉพาะข้อความ UI ที่ระบุไว้ในโค้ด: แสดงชื่อผู้ใช้ ประเภทผู้ใช้ ลิงก์ และข้อความตอบกลับจาก API โดยตรง
+  อย่าส่งค่าจาก API เข้า `TranslatedText` หรือฟังก์ชันแปล
+- URL และข้อมูล API ใช้รูปแบบเดิม รวมถึงเส้นทาง `/th/...` และหน้าเฉพาะของผู้ใช้
+- หน้าที่เพิ่มภายหลังควรใช้สี semantic เช่น `bg-background`, `text-foreground`, `border-border`
+  และขนาดตัวอักษรหน่วย `rem` เพื่อรองรับการตั้งค่าร่วมกัน รูปภาพ วิดีโอ และฉาก WebGL คงสีเดิม
+
+ตรวจตรรกะค่าการอ่านและคำแปลด้วย `bun test tests/ui-preferences.test.mjs`
+
 ## Robot Drag Game V2 Notes
 
 ส่วนนี้อธิบายเกม 3D เวอร์ชัน V2 ที่อยู่ใน `src/components/robot-drag-game/V2/`

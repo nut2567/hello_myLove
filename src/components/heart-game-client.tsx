@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import type { CSSProperties } from "react";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 
@@ -18,10 +20,11 @@ export function HeartGameClient({
   currentHeartId,
   style,
 }: HeartGameClientProps) {
+  const t = useTranslations();
   return (
     <NuqsAdapter>
       <HeartButton
-        aria-label="Generate another random heart"
+        aria-label={t("HeartGame.generateAnotherRandomHeart")}
         authenticatedPlayerName={authenticatedPlayerName}
         className={className}
         currentHeartId={currentHeartId}

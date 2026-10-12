@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useRef, useState } from "react";
@@ -8,7 +10,7 @@ import { TypewriterText } from "./ui/typewriter-text";
 type PathAccessFormProps = {
   action: (formData: FormData) => void | Promise<void>;
   authenticatedPathName?: string | null;
-  errorMessage?: string;
+  errorMessageKey?: string;
   initialModalOpen?: boolean;
   initialPath?: string;
 };
@@ -23,10 +25,11 @@ function normalizePath(value: string): string {
 export function PathAccessForm({
   action,
   authenticatedPathName = null,
-  errorMessage,
+  errorMessageKey,
   initialModalOpen = false,
   initialPath = "",
 }: PathAccessFormProps) {
+  const t = useTranslations();
   const router = useRouter();
   const normalizedInitialPath = normalizePath(initialPath);
   const [path, setPath] = useState(normalizedInitialPath);
@@ -35,7 +38,7 @@ export function PathAccessForm({
     initialModalOpen && normalizedInitialPath.length > 0,
   );
   const passwordRef = useRef<HTMLInputElement>(null);
-  const shouldShowError = errorMessage && pendingPath === normalizedInitialPath;
+  const shouldShowError = errorMessageKey && pendingPath === normalizedInitialPath;
 
   useEffect(() => {
     if (isModalOpen) {
@@ -70,7 +73,7 @@ export function PathAccessForm({
         >
           <TypewriterText
             cursorClassName="pixel-cursor text-lime-300"
-            text="Enter your name เพื่อไปยังหน้าเฉพาะของคุณที่เข้าถึงได้"
+            text={t("PathAccess.enterName")}
           />
         </label>
         <div className="grid gap-4 font-mono sm:grid-cols-[minmax(0,1fr)_auto]">
@@ -82,7 +85,7 @@ export function PathAccessForm({
             inputMode="url"
             name="path"
             onChange={(event) => setPath(event.target.value)}
-            placeholder="Example /nut"
+            placeholder={t("PathAccess.example")}
             required
             spellCheck={false}
             type="text"
@@ -91,9 +94,7 @@ export function PathAccessForm({
           <button
             className="pixel-button h-14 px-5 text-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-200"
             type="submit"
-          >
-            Continue
-          </button>
+          >{t("Common.continue")}</button>
         </div>
       </form>
 
@@ -105,11 +106,8 @@ export function PathAccessForm({
         >
           <div className="pixel-panel pixel-panel-boot pixel-scan-panel w-full max-w-md p-6">
             <div>
-              <p className="text-sm font-black uppercase tracking-normal text-cyan-200">
-                Password
-              </p>
-              <h2 className="mt-3 text-2xl font-black tracking-normal text-white">
-                Unlock /{pendingPath}
+              <p className="text-sm font-black uppercase tracking-normal text-cyan-200">{t("Common.password")}</p>
+              <h2 className="mt-3 text-2xl font-black tracking-normal text-white">{t("PathAccess.unlockPathPrefix")}{pendingPath}
               </h2>
             </div>
 
@@ -118,15 +116,13 @@ export function PathAccessForm({
               <label
                 className="text-sm font-medium leading-6 text-foreground"
                 htmlFor="pin"
-              >
-                Enter password เพื่อปลดล็อคการเข้าถึงหน้านี้
-              </label>
+              >{t("PathAccess.enterPassword")}</label>
               {shouldShowError ? (
                 <p
                   className="border-4 border-red-300 bg-red-950 px-3 py-2 text-sm font-bold text-red-100 shadow-[4px_4px_0_#7f1d1d]"
                   role="alert"
                 >
-                  {errorMessage}
+                  {t(errorMessageKey)}
                 </p>
               ) : null}
               <input
@@ -134,7 +130,7 @@ export function PathAccessForm({
                 className="pixel-input h-12 px-4 text-base"
                 id="pin"
                 name="pin"
-                placeholder="Password"
+                placeholder={t("Common.password")}
                 ref={passwordRef}
                 required
                 type="password"
@@ -143,16 +139,12 @@ export function PathAccessForm({
                 <button
                   className="pixel-button h-11 px-5 text-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-200"
                   type="submit"
-                >
-                  Unlock
-                </button>
+                >{t("PathAccess.unlock")}</button>
                 <button
                   className="pixel-button-secondary h-11 px-5 text-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-fuchsia-200"
                   onClick={() => setIsModalOpen(false)}
                   type="button"
-                >
-                  Cancel
-                </button>
+                >{t("Common.cancel")}</button>
               </div>
             </form>
           </div>

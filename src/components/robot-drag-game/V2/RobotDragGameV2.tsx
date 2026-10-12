@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { ContactShadows, Environment, OrbitControls } from "@react-three/drei";
 import {
   Canvas,
@@ -857,6 +859,7 @@ function RobotArena({
 }
 
 export default function RobotDragGameV2() {
+  const t = useTranslations();
   const [difficulty, setDifficulty] = useState<Difficulty>("easy");
   const [robotStates, setRobotStates] =
     useState<RobotStates>(createRobotStates);
@@ -889,7 +892,7 @@ export default function RobotDragGameV2() {
 
   return (
     <main
-      aria-label="3D robot drag game"
+      aria-label={t("RobotGame.text3dRobotDragGame")}
       className="fixed inset-0 z-50 overflow-hidden bg-[#050816] text-white touch-none"
     >
       <Canvas
@@ -969,6 +972,7 @@ export default function RobotDragGameV2() {
             {difficultyOrder.map((difficultyId) => (
               <button
                 key={difficultyId}
+                aria-pressed={difficulty === difficultyId}
                 className={[
                   "rounded-md px-4 py-2 text-sm font-semibold transition",
                   difficulty === difficultyId
@@ -978,22 +982,19 @@ export default function RobotDragGameV2() {
                 onClick={() => restartGame(difficultyId)}
                 type="button"
               >
-                {difficulties[difficultyId].label}
+                {t(difficulties[difficultyId].label)}
               </button>
             ))}
           </div>
 
           <div className="flex items-center justify-between gap-3 md:justify-end">
-            <div className="rounded-md border border-cyan-200/20 bg-cyan-300/10 px-4 py-2 text-sm font-semibold text-cyan-50">
-              Rescued {capturedCount}/{ROBOT_COUNT}
+            <div className="rounded-md border border-cyan-200/20 bg-cyan-300/10 px-4 py-2 text-sm font-semibold text-cyan-50">{t("RobotGame.rescued")}{" "}{capturedCount}/{ROBOT_COUNT}
             </div>
             <button
               className="rounded-md bg-white px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-100"
               onClick={() => restartGame()}
               type="button"
-            >
-              Restart
-            </button>
+            >{t("RobotGame.restart")}</button>
           </div>
         </div>
       </div>
@@ -1002,19 +1003,13 @@ export default function RobotDragGameV2() {
         <div className="absolute inset-0 z-30 flex items-center justify-center overflow-hidden bg-slate-950/62 px-6 backdrop-blur-sm">
           <PixelFireworks active={isComplete} anchorCount={9} />
           <div className="relative z-10 w-full max-w-md rounded-lg border border-cyan-200/30 bg-slate-950/88 p-6 text-center shadow-2xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-cyan-200">
-              Mission Complete
-            </p>
-            <h1 className="mt-3 text-4xl font-bold tracking-normal text-white">
-              All robots rescued
-            </h1>
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-cyan-200">{t("RobotGame.missionComplete")}</p>
+            <h1 className="mt-3 text-4xl font-bold tracking-normal text-white">{t("RobotGame.allRobotsRescued")}</h1>
             <button
               className="mt-6 rounded-md bg-cyan-300 px-6 py-3 text-sm font-bold text-slate-950 transition hover:bg-cyan-100"
               onClick={() => restartGame()}
               type="button"
-            >
-              Play Again
-            </button>
+            >{t("Common.playAgain")}</button>
           </div>
         </div>
       ) : null}

@@ -1,39 +1,39 @@
-export const updatedAt = "10 พฤษภาคม 2026";
+export const updatedAt = "Structure.text10May2026";
 
 export const currentStack = [
   {
     label: "Next.js",
     value: "16.2.4",
     detail:
-      "ใช้ App Router, route group `(site)`, dynamic import และ build ด้วย Turbopack",
+      "Structure.usesAppRouterTheSiteRouteGroupDynamicImportsAnd",
   },
   {
     label: "React",
     value: "19.2.4",
     detail:
-      "หน้า route เป็น Server Component เป็นหลัก และแยกเกม interactive เป็น Client Component",
+      "Structure.routesPrimarilyUseServerComponentsWithInteractiveGamesInClient",
   },
   {
     label: "Three.js",
     value: "0.182.0",
-    detail: "ใช้เป็น engine WebGL สำหรับฉาก 3D ใน RobotDragGameV2",
+    detail: "Structure.theWebGLEngineFor3DScenesInRobotDragGameV2",
   },
   {
     label: "React Three Fiber",
     value: "9.6.1",
     detail:
-      "เขียน Three.js เป็น React component ผ่าน `<Canvas>`, `<mesh>` และ `useFrame`",
+      "Structure.buildsThreeJsScenesAsReactComponentsUsingCanvasMesh",
   },
   {
     label: "Drei",
     value: "10.7.7",
     detail:
-      "เพิ่ม helper เช่น `OrbitControls`, `Environment`, `Html` และ `ContactShadows`",
+      "Structure.providesHelpersSuchAsOrbitControlsEnvironmentHtmlAndContactShadows",
   },
   {
     label: "Tailwind CSS",
     value: "4",
-    detail: "ใช้ utility class และ design token จาก `src/app/globals.css`",
+    detail: "Structure.usesUtilityClassesAndDesignTokensFromSrcAppGlobals",
   },
 ];
 
@@ -41,386 +41,386 @@ export const routes = [
   {
     path: "/th",
     file: "src/app/(site)/th/page.tsx",
-    detail: "หน้าแรกภาษาไทย มีหัวใจนำไปยัง sequence A-D",
+    detail: "Structure.theThaiHomePageWithHeartsLeadingToTheA",
   },
   {
     path: "/th/structure",
     file: "src/app/(site)/th/structure/page.tsx",
-    detail: "หน้าที่กำลังอ่านอยู่ ใช้สรุปโครงสร้างล่าสุดของโปรเจกต์",
+    detail: "Structure.thePageYouAreReadingDescribingTheCurrentProjectStructure",
   },
   {
     path: "/th/RobotDragGame",
     file: "src/app/(site)/th/RobotDragGame/page.tsx",
     detail:
-      "โหลดเกมด้วย `next/dynamic` และปิด SSR เพราะเกมใช้ WebGL/browser API",
+      "Structure.loadsTheGameWithNextDynamicAndDisablesSSRBecause",
   },
   {
     path: "/[[...slug]]",
     file: "src/app/(site)/[[...slug]]/page.tsx",
-    detail: "catch-all route สำหรับ path อื่นที่ไม่ได้มี route เฉพาะ",
+    detail: "Structure.aCatchAllRouteForPathsWithoutADedicatedRoute",
   },
 ];
 
 export const robotGameFiles = [
   {
     file: "src/components/robot-drag-game/RobotDragGame.tsx",
-    role: "ตัวเลือกเวอร์ชัน",
+    role: "Structure.versionSelector",
     detail:
-      "เป็น wrapper ที่ให้สลับ `v1` และ `v2` จากปุ่มมุมขวาล่าง โดย default เปิด `v2`",
+      "Structure.aWrapperThatSwitchesBetweenV1AndV2UsingThe",
   },
   {
     file: "src/components/robot-drag-game/V1/RobotDragGameV1.tsx",
-    role: "เวอร์ชันเดิม",
+    role: "Structure.originalVersion",
     detail:
-      "เกม 2D แบบ pixel robot ใช้ DOM, pointer event, difficulty และเป้าหมายแบบกระพริบ",
+      "Structure.a2DPixelRobotGameUsingTheDOMPointerEvents",
   },
   {
     file: "src/components/robot-drag-game/V2/RobotDragGameV2.tsx",
-    role: "เวอร์ชันล่าสุด",
+    role: "Structure.latestVersion",
     detail:
-      "เกม 3D ด้วย React Three Fiber มี arena, หุ่นยนต์ 3D, target beacon, drag บนฉาก WebGL และ OrbitControls",
+      "Structure.a3DReactThreeFiberGameWithAnArenaRobots",
   },
 ];
 
 export const v2Flow = [
-  "RobotDragGameV2 เก็บ state หลักของเกม เช่น difficulty, ตำแหน่งหุ่น, target, rescued count และสถานะ mission complete",
-  "Canvas สร้างฉาก WebGL พร้อมกล้อง แสง fog environment และ shadow",
-  "RobotArena เป็น logic หลัก คุมการเดินอัตโนมัติ การลาก การตรวจระยะ target และการย้ายหุ่นไป dock เมื่อ rescue สำเร็จ",
-  "RobotModel สร้างหุ่นยนต์จาก geometry พื้นฐาน เช่น box, sphere และ cylinder พร้อม animation ด้วย useFrame",
-  "TargetBeacon แสดงเป้าหมายเป็นวงแหวน 3D มีแสงและการหมุนเพื่อให้เห็นจุดหมายชัดขึ้น",
-  "OrbitControls เปิดให้หมุนมุมกล้อง แต่จะปิดชั่วคราวตอนลากหุ่นเพื่อไม่ให้ชนกับ drag interaction",
+  "Structure.robotdraggamev2HoldsDifficultyRobotPositionsTheTargetRescuedCountAnd",
+  "Structure.canvasCreatesTheWebGLSceneWithACameraLightingFog",
+  "Structure.robotarenaHandlesAutomaticMovementDraggingTargetDistanceChecksAndDocking",
+  "Structure.robotmodelBuildsRobotsFromBoxesSpheresAndCylindersWithUseFrame",
+  "Structure.targetbeaconDisplaysALitRotating3DRingToMarkThe",
+  "Structure.orbitcontrolsRotatesTheCameraAndIsTemporarilyDisabledWhileDragging",
 ];
 
 export const v2ModelEditNotes = [
   {
-    title: "แก้รูปทรงหุ่น",
-    target: "function RobotModel",
+    title: "Structure.changeRobotGeometry",
+    target: "Structure.functionRobotModel",
     detail:
-      "แก้ JSX ภายใน `RobotModel` โดยตรง ส่วนที่เป็น `<mesh>`, `<boxGeometry>`, `<sphereGeometry>` และ `<cylinderGeometry>` คือชิ้นส่วนของหุ่น เช่น ลำตัว หัว ตา เสาอากาศ แขน และเท้า",
+      "Structure.editJSXInRobotModelTheMeshBoxGeometrySphereGeometryAndCylinderGeometry",
   },
   {
-    title: "แก้สีของหุ่นแต่ละตัว",
-    target: "robotConfigs",
+    title: "Structure.changeIndividualRobotColors",
+    target: "Structure.robotconfigs",
     detail:
-      "แก้ค่า `primary`, `secondary` และ `emissive` ใน `robotConfigs` ถ้าต้องการเปลี่ยนสีรายตัวโดยไม่แตะ geometry ของโมเดล",
+      "Structure.editPrimarySecondaryAndEmissiveInRobotConfigsToChangeColors",
   },
   {
-    title: "แก้ animation ของโมเดล",
-    target: "useFrame ใน RobotModel",
+    title: "Structure.changeModelAnimations",
+    target: "Structure.useframeInRobotModel",
     detail:
-      "แก้ค่าการลอยขึ้นลง, การ scale ตอนลาก, การหมุนหัว และการ lerp ตำแหน่ง ถ้าต้องการเปลี่ยนอารมณ์การเคลื่อนไหวของหุ่น",
+      "Structure.adjustBobbingDragScalingHeadRotationAndPositionInterpolationTo",
   },
   {
-    title: "แก้ตำแหน่ง/การเดินของหุ่นในสนาม",
-    target: "RobotArena",
+    title: "Structure.changeRobotPositionsAndMovement",
+    target: "Structure.robotarena",
     detail:
-      "แก้ `RobotArena` เมื่อสิ่งที่ต้องเปลี่ยนคือ logic เช่น การลาก, ความเร็วเดิน, การชนขอบสนาม, การ rescue หรือการวางหุ่นลง dock ไม่ใช่รูปทรงโมเดล",
+      "Structure.editRobotArenaForDraggingWalkingSpeedBoundaryCollisionsRescueLogic",
   },
 ];
 
 export const v2FunctionMap = [
   {
-    name: "RobotDragGameV2",
-    role: "component หลักของหน้าเกม",
+    name: "Structure.robotdraggamev2",
+    role: "Structure.mainGameComponent",
     detail:
-      "เก็บ state ระดับเกมทั้งหมด แล้วประกอบ `<Canvas>`, แสง, กล้อง, `RobotArena`, `ContactShadows`, `OrbitControls` และ UI ด้านบน เช่น difficulty, rescued count, restart และ modal ตอนจบเกม",
+      "Structure.holdsGameStateAndComposesCanvasLightingTheCameraRobotArena",
   },
   {
-    name: "RobotArena",
-    role: "ตัวคุม gameplay ในฉาก 3D",
+    name: "Structure.robotarena",
+    role: "Structure.text3dGameplayController",
     detail:
-      "ใช้ `useThree` และ `useFrame` เพื่อจัดการ pointer raycast, drag plane, การเดินอัตโนมัติของหุ่น, การเปิด/ปิด target beacon, การตรวจระยะเป้าหมาย และการย้ายหุ่นที่ rescue แล้วไป dock",
+      "Structure.usesUseThreeAndUseFrameForPointerRaycastingTheDragPlane",
   },
   {
-    name: "RobotModel",
-    role: "ตัวโมเดลหุ่นยนต์ 3D",
+    name: "Structure.robotmodel",
+    role: "Structure.text3dRobotModel",
     detail:
-      "เป็นจุดหลักสำหรับแก้หน้าตาหุ่น ภายในประกอบด้วย mesh หลายชิ้น เช่น body, head, eyes, antenna, arms และ feet พร้อม animation เฉพาะตัวด้วย `useFrame`",
+      "Structure.theMainPlaceToChangeRobotAppearanceItContainsMeshes",
   },
   {
-    name: "ArenaFloor",
-    role: "พื้นสนามและ dock",
+    name: "Structure.arenafloor",
+    role: "Structure.arenaFloorAndDocks",
     detail:
-      "สร้างพื้น grid, ขอบสนาม และวง dock ด้านบนของสนาม สีของ dock จะเปลี่ยนตามจำนวนหุ่นที่ถูก rescue แล้ว",
+      "Structure.createsTheGridFloorArenaBordersAndDocksDockColors",
   },
   {
-    name: "TargetBeacon",
-    role: "เป้าหมายที่ต้องลากหุ่นไปหา",
+    name: "Structure.targetbeacon",
+    role: "Structure.robotDestination",
     detail:
-      "สร้างวงแหวนและแสงเป้าหมายแบบ 3D พร้อมหมุน/ขยายเล็กน้อยทุก frame เพื่อให้ผู้เล่นเห็นตำแหน่งเป้าหมายชัดขึ้น",
+      "Structure.createsALit3DTargetRingThatRotatesAndScales",
   },
 ];
 
 export const v2FileSections = [
   {
-    name: '"use client"',
-    role: "บอก Next.js ว่าไฟล์นี้เป็น Client Component",
+    name: "Structure.useClient",
+    role: "Structure.marksTheFileAsANextJsClientComponent",
     detail:
-      "จำเป็นเพราะไฟล์นี้ใช้ `useState`, `useEffect`, pointer event, WebGL canvas และ browser API ผ่าน React Three Fiber",
+      "Structure.requiredBecauseThisFileUsesUseStateUseEffectPointerEventsWebGL",
   },
   {
-    name: "imports จาก @react-three/fiber",
-    role: "แกนหลักของฉาก 3D",
+    name: "Structure.importsFromReactThreeFiber",
+    role: "Structure.core3DSceneTools",
     detail:
-      "`Canvas` สร้างพื้นที่ WebGL, `useFrame` ทำงานทุก animation frame, `useThree` ดึง camera/pointer/raycaster และ `ThreeEvent` ใช้ type event ของวัตถุ 3D",
+      "Structure.canvasCreatesTheWebGLSurfaceUseFrameRunsEveryAnimationFrame",
   },
   {
-    name: "imports จาก @react-three/drei",
-    role: "helper ของ Three.js",
+    name: "Structure.importsFromReactThreeDrei",
+    role: "Structure.threeJsHelpers",
     detail:
-      "`Environment` ใส่แสงสภาพแวดล้อม, `OrbitControls` หมุนกล้อง, `Html` วาง DOM label ในโลก 3D และ `ContactShadows` ทำเงาสัมผัสพื้น",
+      "Structure.environmentSuppliesLightingOrbitControlsRotatesTheCameraHtmlPlacesDOM",
   },
   {
-    name: "imports จาก three",
-    role: "class พื้นฐานของ Three.js",
+    name: "Structure.importsFromThree",
+    role: "Structure.threeJsBaseClasses",
     detail:
-      "`Color` ใช้ตั้งสีพื้นหลัง, `MathUtils` ใช้ lerp animation, `Plane` ใช้เป็นระนาบลาก, `Vector3` เก็บตำแหน่ง pointer ในโลก 3D และ type `Group`/`Mesh` ใช้กับ refs",
+      "Structure.colorSetsTheBackgroundMathUtilsInterpolatesAnimationPlaneDefinesThe",
   },
 ];
 
 export const v2TypeMap = [
   {
-    name: "RobotId",
+    name: "Structure.robotid",
     detail:
-      "union type ของ id หุ่นทั้ง 5 ตัว ทำให้ state และ config อ้างชื่อหุ่นได้แบบ type-safe",
+      "Structure.aUnionOfTheFiveRobotIDsEnablingTypeSafe",
   },
   {
-    name: "Difficulty",
+    name: "Structure.difficulty",
     detail:
-      "union type ของระดับความยาก `easy`, `medium`, `hard` ใช้เป็น key ของ object `difficulties`",
+      "Structure.theEasyMediumAndHardDifficultyUnionUsedAsKeys",
   },
   {
-    name: "RobotConfig",
+    name: "Structure.robotconfig",
     detail:
-      "ข้อมูลประจำตัวหุ่น เช่น id, ชื่อ, สีหลัก, สีรอง, สี emissive และ phase สำหรับทำ animation ให้แต่ละตัวขยับไม่พร้อมกัน",
+      "Structure.robotIdentityIDNamePrimarySecondaryAndEmissiveColorsPlus",
   },
   {
-    name: "RobotState",
+    name: "Structure.robotstate",
     detail:
-      "state ของหุ่นหนึ่งตัว มีตำแหน่ง `x`, `z`, มุมหัน `yaw` และสถานะ `captured`",
+      "Structure.oneRobotSStateXZPositionYawAndCaptured",
   },
   {
-    name: "RobotStates",
+    name: "Structure.robotstates",
     detail:
-      "record ที่ map จาก `RobotId` ไปเป็น `RobotState` ใช้เก็บสถานะหุ่นทุกตัวในเกม",
+      "Structure.aRecordMappingRobotIdToRobotStateHoldingEveryRobotS",
   },
   {
-    name: "RobotMotion / RobotMotions",
+    name: "Structure.robotmotionRobotMotions",
     detail:
-      "ข้อมูลการเดินอัตโนมัติของหุ่น เช่น velocity แกน x/z, เวลาเปลี่ยนทิศ และเวลาหยุดพัก",
+      "Structure.automaticMovementDataXZVelocityDirectionChangeTimeAnd",
   },
   {
-    name: "TargetPoint",
+    name: "Structure.targetpoint",
     detail:
-      "ตำแหน่งบนพื้นสนาม ใช้แกน `x` และ `z` เพราะเกมวางวัตถุบนระนาบแนวนอน",
+      "Structure.anArenaFloorPositionUsingXAndZBecauseObjects",
   },
   {
-    name: "DragSession",
+    name: "Structure.dragsession",
     detail:
-      "ข้อมูลตอนกำลังลาก เก็บ id หุ่นและ offset ระหว่าง pointer กับตำแหน่งหุ่น เพื่อให้ลากแล้วไม่กระโดดไปติดกลาง pointer ทันที",
+      "Structure.theRobotIDAndPointerOffsetForADragPreventing",
   },
   {
-    name: "DifficultySettings",
+    name: "Structure.difficultysettings",
     detail:
-      "ค่าปรับ gameplay ต่อระดับความยาก เช่น ความเร็ว รัศมี target การมองเห็น target ช่วงเวลากระพริบ และระยะใกล้ที่ทำให้ target โผล่",
+      "Structure.gameplaySettingsForEachDifficultySpeedTargetRadiusVisibilityFlash",
   },
 ];
 
 export const v2ConstantMap = [
   {
-    name: "ARENA_WIDTH / ARENA_DEPTH",
+    name: "Structure.arenaWIDTHARENADEPTH",
     detail:
-      "ขนาดสนามบนแกน x และ z ใช้ทั้งตอนวาดพื้น ขอบสนาม และจำกัดตำแหน่งหุ่น",
+      "Structure.arenaSizeAlongXAndZUsedForTheFloor",
   },
   {
-    name: "HALF_WIDTH / HALF_DEPTH",
+    name: "Structure.halfWIDTHHALFDEPTH",
     detail:
-      "ครึ่งหนึ่งของขนาดสนาม ช่วยให้คำนวณขอบซ้ายขวาหน้าหลังง่ายขึ้น",
+      "Structure.halfTheArenaDimensionsSimplifyingBoundaryCalculations",
   },
   {
-    name: "ROBOT_RADIUS",
+    name: "Structure.robotRADIUS",
     detail:
-      "ระยะเผื่อรอบตัวหุ่น ใช้ clamp ตำแหน่งไม่ให้หุ่นทะลุออกนอกขอบสนาม",
+      "Structure.robotClearanceUsedToClampPositionsInsideTheArena",
   },
   {
-    name: "ROBOT_COUNT",
+    name: "Structure.robotCOUNT",
     detail:
-      "จำนวนหุ่นทั้งหมด ใช้คำนวณ dock และตรวจว่า rescue ครบหรือยัง",
+      "Structure.theTotalRobotCountUsedForDockPlacementAndCompletion",
   },
   {
-    name: "robotConfigs",
+    name: "Structure.robotconfigs",
     detail:
-      "รายการหุ่นทั้ง 5 ตัว เป็นแหล่งแก้ชื่อ สี และ phase animation ของหุ่นแต่ละตัว",
+      "Structure.theFiveRobotConfigurationsDefiningEachNameColorAndAnimation",
   },
   {
-    name: "difficulties",
+    name: "Structure.difficulties",
     detail:
-      "ชุด config ของระดับความยาก มีผลกับความเร็วหุ่น รัศมี target และ pattern การปรากฏของ target",
+      "Structure.difficultySettingsForRobotSpeedTargetRadiusAndTargetVisibility",
   },
   {
-    name: "difficultyOrder",
+    name: "Structure.difficultyorder",
     detail:
-      "ลำดับปุ่ม difficulty ที่ render ใน UI ด้านบนของเกม",
+      "Structure.theOrderOfDifficultyButtonsInTheGameToolbar",
   },
 ];
 
 export const v2HelperMap = [
   {
-    name: "randomBetween(min, max)",
+    name: "Structure.randombetweenMinMax",
     detail:
-      "สุ่มเลขทศนิยมระหว่าง min กับ max ใช้กับตำแหน่ง ความเร็ว เวลาเปลี่ยนทิศ และช่วงกระพริบของ target",
+      "Structure.returnsARandomDecimalBetweenMinAndMaxForPositions",
   },
   {
-    name: "clamp(value, min, max)",
+    name: "Structure.clampValueMinMax",
     detail:
-      "บังคับค่าให้อยู่ในช่วงที่กำหนด ใช้กันหุ่นออกนอกสนามตอนเดินเองและตอนถูกลาก",
+      "Structure.constrainsAValueToARangeKeepingWalkingAndDragged",
   },
   {
-    name: "distance2D(a, b)",
+    name: "Structure.distance2dAB",
     detail:
-      "วัดระยะบนพื้นสนามด้วยแกน x/z ใช้ตรวจว่าหุ่นเข้าใกล้ target พอจะ rescue หรือ reveal target หรือยัง",
+      "Structure.measuresXZDistanceToCheckRescueAndProximityReveal",
   },
   {
-    name: "getNow()",
+    name: "Structure.getnow",
     detail:
-      "คืนค่า `performance.now()` ถ้ามี browser performance API และคืน 0 ถ้าไม่มี ช่วยให้โค้ดไม่พังในสภาพแวดล้อมที่ยังไม่มี `performance`",
+      "Structure.returnsPerformanceNowWhenAvailableOtherwise0AllowingEnvironmentsWithout",
   },
   {
-    name: "createPoint(margin = 0.9)",
+    name: "Structure.createpointMargin09",
     detail:
-      "สุ่มตำแหน่ง target ใหม่ในสนาม โดยเว้น margin จากขอบสนามเพื่อไม่ให้เป้าหมายชิดขอบเกินไป",
+      "Structure.createsARandomTargetPositionWithAMarginFromThe",
   },
   {
-    name: "createRobotStates()",
+    name: "Structure.createrobotstates",
     detail:
-      "สุ่มตำแหน่งเริ่มต้นและ yaw ของหุ่นทุกตัว ตอนเริ่มเกมหรือ restart",
+      "Structure.randomizesTheInitialPositionAndYawOfEveryRobotAt",
   },
   {
-    name: "createRobotMotion(now, difficulty)",
+    name: "Structure.createrobotmotionNowDifficulty",
     detail:
-      "สร้าง motion ของหุ่นหนึ่งตัว มีโอกาสหยุดพัก 18% ถ้าไม่หยุดจะสุ่มทิศ สุ่มความเร็ว แล้วคูณด้วย speed ของ difficulty",
+      "Structure.createsMotionForOneRobotWithAn18ChanceTo",
   },
   {
-    name: "createRobotMotions(now, difficulty)",
+    name: "Structure.createrobotmotionsNowDifficulty",
     detail:
-      "สร้าง motion ครบทุกหุ่นโดยวน `robotConfigs` แล้วเรียก `createRobotMotion` ทีละตัว",
+      "Structure.createsMotionForEveryRobotByIteratingRobotConfigsAndCalling",
   },
   {
-    name: "createFlashSchedule(now, difficulty)",
+    name: "Structure.createflashscheduleNowDifficulty",
     detail:
-      "คำนวณเวลาที่ target beacon จะปรากฏ/หายตาม difficulty ถ้า easy จะตั้ง `visibleUntil` เป็น infinity เพราะมองเห็นตลอด",
+      "Structure.schedulesTargetBeaconVisibilityByDifficultyEasyUsesAnInfinite",
   },
   {
-    name: "getDockPoint(index)",
+    name: "Structure.getdockpointIndex",
     detail:
-      "คำนวณตำแหน่ง dock ด้านบนของสนามสำหรับวางหุ่นที่ rescue สำเร็จ",
+      "Structure.calculatesADockPositionForARescuedRobotAtThe",
   },
   {
-    name: "countCaptured(states)",
+    name: "Structure.countcapturedStates",
     detail:
-      "นับจำนวนหุ่นที่มี `captured: true` ใช้แสดง rescued count และเลือก dock ถัดไป",
+      "Structure.countsRobotsWithCapturedTrueForTheRescuedCountAnd",
   },
 ];
 
 export const v2NestedFunctionMap = [
   {
-    name: "finishDrag()",
+    name: "Structure.finishdrag",
     owner: "RobotArena",
     detail:
-      "ทำงานตอน pointerup หรือ pointercancel ถ้ามี drag session จะหยุดลาก ตรวจระยะหุ่นกับ target ถ้าอยู่ในรัศมีจะตั้ง `captured: true`, ย้ายหุ่นไป dock, เพิ่ม count, สุ่ม target ใหม่ หรือจบเกมถ้าครบทุกตัว",
+      "Structure.onPointerupOrPointercancelEndsDraggingAndChecksTargetDistance",
   },
   {
-    name: "handleRobotPointerDown(id, event)",
+    name: "Structure.handlerobotpointerdownIdEvent",
     owner: "RobotArena",
     detail:
-      "เริ่มลากหุ่นเมื่อกดบนโมเดล 3D โดยหยุด event bubbling, บันทึก id หุ่น และคำนวณ offset ระหว่างตำแหน่งหุ่นกับจุดที่ pointer ชน mesh",
+      "Structure.startsDraggingA3DRobotStopsEventBubblingStoresIts",
   },
   {
-    name: "restartGame(nextDifficulty = difficulty)",
+    name: "Structure.restartgameNextDifficultyDifficulty",
     owner: "RobotDragGameV2",
     detail:
-      "reset เกมใหม่ ตั้ง difficulty, สร้างตำแหน่งหุ่นใหม่, สุ่ม target ใหม่, reset dragged/captured/complete และเพิ่ม `restartKey` เพื่อบอก `RobotArena` ให้ reset motion กับ flash schedule",
+      "Structure.resetsDifficultyRobotPositionsTheTargetDraggingRescuedCountAnd",
   },
 ];
 
 export const v2StateMap = [
   {
-    name: "difficulty",
+    name: "Structure.difficulty2",
     detail:
-      "ระดับความยากปัจจุบัน ใช้เลือก speed, target radius และการมองเห็น target",
+      "Structure.currentDifficultySelectingSpeedTargetRadiusAndTargetVisibility",
   },
   {
-    name: "robotStates",
+    name: "Structure.robotstates2",
     detail:
-      "ตำแหน่ง มุมหัน และสถานะ captured ของหุ่นทุกตัว เป็น state หลักที่ drive การ render ของ `RobotModel`",
+      "Structure.everyRobotSPositionOrientationAndCapturedStatusDrivingRobotModel",
   },
   {
-    name: "target",
+    name: "Structure.target",
     detail:
-      "ตำแหน่งเป้าหมายปัจจุบันที่ผู้เล่นต้องลากหุ่นไปหา",
+      "Structure.theCurrentDestinationForDraggedRobots",
   },
   {
-    name: "targetVisible",
+    name: "Structure.targetvisible",
     detail:
-      "ควบคุมว่า `TargetBeacon` มองเห็นหรือไม่ โดย easy เห็นตลอด ส่วน medium/hard จะกระพริบหรือโผล่เมื่อหุ่นอยู่ใกล้",
+      "Structure.controlsTargetBeaconVisibilityAlwaysVisibleOnEasyFlashingOrRevealed",
   },
   {
-    name: "draggedId",
+    name: "Structure.draggedid",
     detail:
-      "id ของหุ่นที่กำลังถูกลาก ถ้าไม่ลากจะเป็น null และใช้ปิด `OrbitControls` ชั่วคราวระหว่างลาก",
+      "Structure.theDraggedRobotIDOrNullWhenIdleTemporarilyDisables",
   },
   {
-    name: "capturedCount",
+    name: "Structure.capturedcount",
     detail:
-      "จำนวนหุ่นที่ rescue แล้ว ใช้แสดง UI `Rescued x/5`",
+      "Structure.theRescuedRobotCountShownAsRescuedX5",
   },
   {
-    name: "isComplete",
+    name: "Structure.iscomplete",
     detail:
-      "สถานะจบเกม ใช้หยุด logic ใน `RobotArena` และเปิด modal Mission Complete",
+      "Structure.completionStateStoppingRobotArenaLogicAndOpeningTheMissionComplete",
   },
   {
-    name: "restartKey",
+    name: "Structure.restartkey",
     detail:
-      "ตัวเลขที่เพิ่มทุกครั้งตอน restart เพื่อ trigger effect ใน `RobotArena` แม้ difficulty จะไม่ได้เปลี่ยน",
+      "Structure.anIncrementingRestartCounterThatTriggersRobotArenaEffectsEvenWhen",
   },
 ];
 
 export const v2RefMap = [
   {
-    name: "statesRef / targetRef / difficultyRef",
+    name: "Structure.statesrefTargetRefDifficultyRef",
     detail:
-      "เก็บค่า state ล่าสุดไว้ใช้ใน `useFrame` และ event callback เพื่อเลี่ยงปัญหา closure เก่าระหว่าง animation loop",
+      "Structure.storesCurrentStateForUseFrameAndEventCallbacksToAvoid",
   },
   {
-    name: "targetVisibleRef / isCompleteRef / draggedIdRef",
+    name: "Structure.targetvisiblerefIsCompleteRefDraggedIdRef",
     detail:
-      "mirror state ที่ต้องถูกอ่านใน frame loop หรือ callback โดยไม่ต้องรอ render รอบใหม่",
+      "Structure.mirrorsStateNeededByFrameLoopsOrCallbacksWithoutWaiting",
   },
   {
-    name: "dragRef",
+    name: "Structure.dragref",
     detail:
-      "เก็บ drag session ปัจจุบัน ถ้ามีค่าคือกำลังลากหุ่นอยู่",
+      "Structure.theCurrentDragSessionAValueMeansARobotIs",
   },
   {
-    name: "pointerWorldRef",
+    name: "Structure.pointerworldref",
     detail:
-      "Vector3 ที่ reuse เพื่อเก็บตำแหน่ง pointer หลัง raycast ชน plane ลดการสร้าง object ใหม่ทุก frame",
+      "Structure.aReusedVector3HoldingThePointerPositionAfterRaycastingOnto",
   },
   {
-    name: "dragPlane",
+    name: "Structure.dragplane",
     detail:
-      "Plane แนวนอน y=0 ใช้แปลงตำแหน่ง pointer บนจอให้เป็นตำแหน่งบนพื้นสนาม",
+      "Structure.aHorizontalPlaneAtY0MappingScreenPointerCoordinates",
   },
   {
-    name: "motionsRef",
+    name: "Structure.motionsref",
     detail:
-      "เก็บ motion ของหุ่นทุกตัวสำหรับการเดินเอง และอัปเดตทุก frame โดยไม่ต้องเป็น React state",
+      "Structure.storesAndUpdatesAutomaticMovementForEveryRobotEachFrame",
   },
   {
-    name: "flashRef",
+    name: "Structure.flashref",
     detail:
-      "เก็บ schedule การกระพริบของ target beacon เช่น `nextAt` และ `visibleUntil`",
+      "Structure.storesTargetBeaconFlashTimingIncludingNextAtAndVisibleUntil",
   },
 ];
 

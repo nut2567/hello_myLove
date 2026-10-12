@@ -63,7 +63,7 @@ export const robotConfigs: RobotConfig[] = [
 
 export const difficulties: Record<Difficulty, DifficultySettings> = {
   easy: {
-    label: "Easy",
+    label: "RobotGame.difficulty.easy",
     speed: 0.62,
     targetRadius: 0.3,
     alwaysVisible: true,
@@ -72,7 +72,7 @@ export const difficulties: Record<Difficulty, DifficultySettings> = {
     nearRevealDistance: 1.8,
   },
   medium: {
-    label: "Medium",
+    label: "RobotGame.difficulty.medium",
     speed: 0.88,
     targetRadius: 0.2,
     alwaysVisible: false,
@@ -81,7 +81,7 @@ export const difficulties: Record<Difficulty, DifficultySettings> = {
     nearRevealDistance: 1.45,
   },
   hard: {
-    label: "Hard",
+    label: "RobotGame.difficulty.hard",
     speed: 1.18,
     targetRadius: 0.2,
     alwaysVisible: false,

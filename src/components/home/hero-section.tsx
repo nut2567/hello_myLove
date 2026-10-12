@@ -1,3 +1,6 @@
+
+import { TranslatedText } from "@/components/translated-text";
+
 import { ButtonLink } from "@/components/ui/button-link";
 import { Badge } from "@/components/ui/badge";
 import { siteConfig, stackItems } from "@/lib/site";
@@ -9,30 +12,24 @@ export function HeroSection() {
         <div>
           <Badge>Next 16 + Tailwind 4</Badge>
           <h1 className="mt-6 max-w-3xl text-4xl font-semibold leading-[1.08] text-foreground sm:text-6xl">
-            {siteConfig.title}
+            <TranslatedText messageKey={siteConfig.title} />
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
-            {siteConfig.description}
+            <TranslatedText messageKey={siteConfig.description} />
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <ButtonLink href={siteConfig.links.nextDocs} external>
-              Next.js docs
-            </ButtonLink>
+            <ButtonLink href={siteConfig.links.nextDocs} external><TranslatedText messageKey={"Home.nextJsDocs"} /></ButtonLink>
             <ButtonLink
               href={siteConfig.links.tailwindDocs}
               variant="secondary"
               external
-            >
-              Tailwind docs
-            </ButtonLink>
+            ><TranslatedText messageKey={"Home.tailwindDocs"} /></ButtonLink>
           </div>
         </div>
 
         <aside className="rounded-lg border border-border bg-surface p-6 shadow-soft">
-          <p className="text-sm font-medium uppercase text-muted-foreground">
-            Runtime stack
-          </p>
+          <p className="text-sm font-medium uppercase text-muted-foreground"><TranslatedText messageKey={"Home.runtimeStack"} /></p>
           <dl className="mt-6 divide-y divide-border">
             {stackItems.map((item) => (
               <div
@@ -45,7 +42,7 @@ export function HeroSection() {
                     {item.value}
                   </p>
                   <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                    {item.detail}
+                    <TranslatedText messageKey={item.detail} />
                   </p>
                 </dd>
               </div>

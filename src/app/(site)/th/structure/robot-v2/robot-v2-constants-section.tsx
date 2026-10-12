@@ -1,3 +1,6 @@
+
+import { TranslatedText } from "@/components/translated-text";
+
 import { v2ConstantMap } from "../structure-data";
 
 export function RobotV2ConstantsSection() {
@@ -5,9 +8,7 @@ export function RobotV2ConstantsSection() {
     <>
           
                     <div className="mt-14">
-                      <h3 className="text-2xl font-semibold tracking-normal text-foreground">
-                        Constants และ config หลัก
-                      </h3>
+                      <h3 className="text-2xl font-semibold tracking-normal text-foreground"><TranslatedText messageKey={"Structure.mainConstantsAndConfiguration"} /></h3>
                       <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                         {v2ConstantMap.map((item) => (
                           <article
@@ -15,10 +16,10 @@ export function RobotV2ConstantsSection() {
                             className="rounded-lg border border-border bg-surface p-5 shadow-soft"
                           >
                             <h4 className="font-mono text-sm font-semibold text-accent">
-                              {item.name}
+                              <TranslatedText messageKey={item.name} />
                             </h4>
                             <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                              {item.detail}
+                              <TranslatedText messageKey={item.detail} />
                             </p>
                           </article>
                         ))}

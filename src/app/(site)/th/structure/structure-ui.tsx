@@ -1,3 +1,6 @@
+
+import { TranslatedText } from "@/components/translated-text";
+
 import type { ReactNode } from "react";
 
 export function SectionHeading({
@@ -12,10 +15,10 @@ export function SectionHeading({
   return (
     <div className="max-w-3xl">
       <p className="text-sm font-semibold uppercase tracking-normal text-accent">
-        {eyebrow}
+        <TranslatedText messageKey={eyebrow} />
       </p>
       <h2 className="mt-3 text-3xl font-semibold tracking-normal text-foreground">
-        {title}
+        <TranslatedText messageKey={title} />
       </h2>
       {children ? (
         <p className="mt-4 text-base leading-7 text-muted-foreground">
