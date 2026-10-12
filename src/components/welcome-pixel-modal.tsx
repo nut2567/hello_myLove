@@ -4,6 +4,8 @@ import Link from "next/link";
 import type { Route } from "next";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
+import type { IconType } from "react-icons";
+import { MdAccountTree, MdFavorite, MdImage, MdSmartToy } from "react-icons/md";
 import { PixelRobot } from "./robot-drag-game/V1/PixelRobot";
 import { PixelFireworks } from "@/components/ui/pixel-fireworks";
 import { TypewriterText } from "@/components/ui/typewriter-text";
@@ -12,12 +14,12 @@ import {
   getNextThaiDailyDate,
 } from "@/lib/date-time";
 
-const pathChips = [
-  "/th/structure",
-  "/th/heart",
-  "/th/logo",
-  "/th/RobotDragGame",
-] as const satisfies readonly Route[];
+const pageShortcuts = [
+  { href: "/th/structure", label: "Project structure", icon: MdAccountTree },
+  { href: "/th/heart", label: "Heart game", icon: MdFavorite },
+  { href: "/th/logo", label: "Project logo", icon: MdImage },
+  { href: "/th/RobotDragGame", label: "Robot game", icon: MdSmartToy },
+] as const satisfies readonly { href: Route; label: string; icon: IconType }[];
 
 const WELCOME_COOKIE_NAME = "welcome_pixel_hidden_until";
 const entranceEdges = [
@@ -195,6 +197,7 @@ export function WelcomePixelModal() {
           <motion.div
             className="pixel-panel pixel-scan-panel w-full max-w-lg p-5"
             onMouseDown={(event) => event.stopPropagation()}
+            style={{ maxHeight: "calc(100dvh - 4rem)", overflowY: "auto" }}
             variants={panelVariants}
           >
             <motion.div
@@ -239,22 +242,23 @@ export function WelcomePixelModal() {
               className="mt-5 border-y-4 border-white/80 py-4 text-sm font-bold leading-6 text-zinc-100"
               variants={getPieceVariants(2, entranceOffsets)}
             >
-              You can access every path here and enjoy the web app, private
-              rooms, robot game, heart page, logo page, and project structure.
+              Choose a page below to explore the project, play games, or view
+              the logo. You can also visit your private room from the home page.
             </motion.p>
 
             <motion.div
-              aria-label="Available paths"
+              aria-label="Explore pages"
               className="mt-5 grid gap-2 sm:grid-cols-2"
               variants={getPieceVariants(3, entranceOffsets)}
             >
-              {pathChips.map((path) => (
+              {pageShortcuts.map(({ href, label, icon: Icon }) => (
                 <Link
-                  className="pixel-chip px-3 py-2 text-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-200"
-                  href={path}
-                  key={path}
+                  className="pixel-chip min-h-12 gap-3 px-3 py-2 text-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-200"
+                  href={href}
+                  key={href}
                 >
-                  {path}
+                  <Icon aria-hidden="true" className="size-6 shrink-0" />
+                  <span>{label}</span>
                 </Link>
               ))}
             </motion.div>
@@ -271,13 +275,6 @@ export function WelcomePixelModal() {
               >
                 Start explore
               </button>
-              <Link
-                className="pixel-button-secondary px-5 py-3 text-sm focus-visible:outline-2 focus-visible:outline-fuchsia-200 focus-visible:outline-offset-4"
-                href="/th/RobotDragGame"
-                onClick={closeModal}
-              >
-                Play robot game
-              </Link>
             </motion.div>
 
             <motion.label

@@ -1,6 +1,6 @@
 {
   "name": "hello-my-love",
-  "version": "0.2.178",
+  "version": "0.2.195",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -18,8 +18,8 @@
     "dayjs": "^1.11.20",
     "framer-motion": "^12.38.0",
     "mongodb": "^7.2.0",
-    "next": "16.2.4",
-    "next-auth": "^5.0.0-beta.31",
+    "next": "16.3.8",
+    "next-auth": "5.0.0-beta.32",
     "nuqs": "^2.8.9",
     "react": "19.2.4",
     "react-dom": "19.2.4",
@@ -34,7 +34,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.2.4",
+    "eslint-config-next": "16.3.8",
     "postcss": "^8.5.14",
     "tailwindcss": "^4",
     "typescript": "^5"

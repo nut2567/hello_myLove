@@ -1,10 +1,13 @@
 "use client";
 
+import type { Route } from "next";
+import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { TypewriterText } from "./ui/typewriter-text";
 
 type PathAccessFormProps = {
   action: (formData: FormData) => void | Promise<void>;
+  authenticatedPathName?: string | null;
   errorMessage?: string;
   initialModalOpen?: boolean;
   initialPath?: string;
@@ -19,10 +22,12 @@ function normalizePath(value: string): string {
 
 export function PathAccessForm({
   action,
+  authenticatedPathName = null,
   errorMessage,
   initialModalOpen = false,
   initialPath = "",
 }: PathAccessFormProps) {
+  const router = useRouter();
   const normalizedInitialPath = normalizePath(initialPath);
   const [path, setPath] = useState(normalizedInitialPath);
   const [pendingPath, setPendingPath] = useState(normalizedInitialPath);
@@ -44,6 +49,11 @@ export function PathAccessForm({
     const normalizedPath = normalizePath(path);
 
     if (!normalizedPath) {
+      return;
+    }
+
+    if (normalizedPath === authenticatedPathName) {
+      router.push(`/${normalizedPath}` as Route);
       return;
     }
 
@@ -109,8 +119,7 @@ export function PathAccessForm({
                 className="text-sm font-medium leading-6 text-foreground"
                 htmlFor="pin"
               >
-                Enter password ที่คุณแจ้งกับกระผมไว้ หรือ วันเกิด เช่น
-                01/01/2000 เพื่อปลดล็อคการเข้าถึงหน้านี้
+                Enter password เพื่อปลดล็อคการเข้าถึงหน้านี้
               </label>
               {shouldShowError ? (
                 <p

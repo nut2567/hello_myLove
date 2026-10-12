@@ -41,9 +41,20 @@ async function unlockSubmittedPath(formData: FormData) {
   "use server";
 
   const name = normalizeSubmittedPathName(formData.get("path"));
+
+  if (!name) {
+    notFound();
+  }
+
+  const session = await auth();
+
+  if (session?.user?.pathName === name) {
+    redirect(`/${name}`);
+  }
+
   const pin = readPin(formData.get("pin"));
 
-  if (!name || !pin) {
+  if (!pin) {
     notFound();
   }
 
@@ -326,11 +337,16 @@ export default async function CatchAllPage({
   const { slug = [] } = await params;
 
   if (slug.length === 0) {
+    const session = await auth();
+
     return (
       <>
         <WelcomePixelModal />
         <HomeSlideWrapper>
-          <PathAccessForm action={unlockSubmittedPath} />
+          <PathAccessForm
+            action={unlockSubmittedPath}
+            authenticatedPathName={session?.user?.pathName}
+          />
         </HomeSlideWrapper>
       </>
     );
@@ -364,6 +380,7 @@ export default async function CatchAllPage({
     return (
       <PathAccessForm
         action={unlockSubmittedPath}
+        authenticatedPathName={session?.user?.pathName}
         errorMessage={
           hasInvalidPassword
             ? "Password is incorrect. หรืออติดต่อ admin เพื่อขอเข้าถึงหน้านี้ครับ"
