@@ -26,7 +26,7 @@ COPY . .
 
 # Build the Next.js application
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN bun run build
+RUN bun run build && bun run check
 
 # ============================================
 # Stage 3: Production runtime
@@ -60,6 +60,9 @@ EXPOSE 3600
 # Set the port environment variable
 ENV PORT=3600
 ENV HOSTNAME="0.0.0.0"
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl --fail --silent http://127.0.0.1:3600/api/health || exit 1
 
 # Start the application
 CMD ["bun", "server.js"]

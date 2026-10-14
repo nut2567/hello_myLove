@@ -3,15 +3,19 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: hello-next:local
+    image: hello-my-love-local:current
     container_name: hello-next
+    env_file:
+      - ${HELLO_MYLOVE_ENV_FILE:-.env.local}
     environment:
       - NODE_ENV=production
       - HOSTNAME=0.0.0.0
       - HOST=http://localhost:3600
       - PORT=3600
       - NEXT_PUBLIC_HOST=http://localhost:3600
+      - AUTH_URL=http://localhost:3600
+      - AUTH_TRUST_HOST=true
     user: nextjs
     ports:
-      - "3600:3600"
-    restart: always
+      - "127.0.0.1:3600:3600"
+    restart: unless-stopped

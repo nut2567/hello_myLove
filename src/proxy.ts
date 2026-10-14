@@ -20,11 +20,14 @@ type VisitorPayload = {
 const VISITOR_TRACKING_SECRET_HEADER = "x-visitor-tracking-secret";
 
 const ASSET_EXTENSION_PATTERN =
-  /\.(?:avif|css|gif|ico|jpeg|jpg|js|json|map|png|svg|webp|woff2?)$/i;
+  /\.(?:avif|css|gif|ico|jpeg|jpg|js|json|map|png|svg|webp|woff2?|ttf|otf|txt|xml|pdf|mp3|mp4|webm|wav|glb|gltf)$/i;
 
-const EXCLUDED_PATHS = new Set(["/favicon.ico", "/robots.txt", "/sitemap.xml"]);
+const EXCLUDED_PATHS = new Set([
+  "/favicon.ico", "/robots.txt", "/sitemap.xml",
+  "/th/heart", // Redirects to the actual game page, which counts the visit.
+]);
 
-const EXCLUDED_PATH_PREFIXES = ["/th", "/"];
+const EXCLUDED_PATH_PREFIXES = ["/api", "/_next"];
 
 function matchesPathOrPrefix(pathname: string, pathPrefix: string): boolean {
   return pathname === pathPrefix || pathname.startsWith(`${pathPrefix}/`);
@@ -96,16 +99,7 @@ function shouldTrackRequest(request: NextRequest): boolean {
     return false;
   }
 
-  if (
-    pathname.startsWith("/_next/static") ||
-    pathname.startsWith("/_next/image") ||
-    pathname.startsWith("/_next/data") ||
-    pathname === "/api/auth" ||
-    pathname.startsWith("/api/auth/") ||
-    pathname === "/api/visitor" ||
-    pathname.startsWith("/api/visitor/") ||
-    ASSET_EXTENSION_PATTERN.test(pathname)
-  ) {
+  if (ASSET_EXTENSION_PATTERN.test(pathname)) {
     return false;
   }
 
@@ -113,6 +107,17 @@ function shouldTrackRequest(request: NextRequest): boolean {
     request.headers.get("purpose") === "prefetch" ||
     request.headers.get("sec-purpose") === "prefetch" ||
     request.headers.has("next-router-prefetch")
+  ) {
+    return false;
+  }
+
+  // Count full page opens/refreshes, rather than RSC fetches or background
+  // requests triggered by the router, query changes, and cached navigation.
+  if (
+    request.headers.has("rsc") ||
+    !request.headers.get("accept")?.includes("text/html") ||
+    (request.headers.has("sec-fetch-dest") &&
+      request.headers.get("sec-fetch-dest") !== "document")
   ) {
     return false;
   }
@@ -160,8 +165,10 @@ export function proxy(request: NextRequest, event: NextFetchEvent) {
         body: JSON.stringify(payload),
         cache: "no-store",
       })
-        .then(() => undefined)
-        .catch(() => undefined),
+        .then((response) => {
+          if (!response.ok) console.error("Visitor tracking failed:", response.status);
+        })
+        .catch(() => console.error("Visitor tracking request failed.")),
     );
   }
 
@@ -170,5 +177,5 @@ export function proxy(request: NextRequest, event: NextFetchEvent) {
 
 export const config = {
   matcher:
-    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|api/auth|api/visitor).*)",
+    "/((?!_next|favicon.ico|robots.txt|sitemap.xml|api/).*)",
 };

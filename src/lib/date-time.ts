@@ -31,6 +31,10 @@ export function getCurrentThaiDateTimeString(): string {
   return formatThaiDateTimeString();
 }
 
+export function formatThaiDateString(date: ConfigType = dayjs()): string {
+  return dayjs(date).tz(THAI_TIME_ZONE).format("YYYY-MM-DD");
+}
+
 export function getNextThaiDailyDate(
   { hour, millisecond = 0, minute = 0, second = 0 }: DailyTimeOptions,
   now: ConfigType = dayjs(),

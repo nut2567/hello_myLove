@@ -8,6 +8,7 @@ import Link from "next/link";
 import { siteConfig } from "@/lib/site";
 import { PixelProjectLogo } from "@/components/ui/pixel-project-logo";
 import { AccessibilityControls } from "@/components/layout/accessibility-controls";
+import { VisitorStats } from "@/components/layout/visitor-stats";
 
 
 type SiteShellProps = {
@@ -33,6 +34,7 @@ export function SiteShell({ children }: SiteShellProps) {
           >
             <Link className="pixel-shell-link" href="/th/structure">{t("Navigation.structure")}</Link>
             <Link className="pixel-shell-link" href="/th/heart">{t("Navigation.heart")}</Link>
+            <Link className="pixel-shell-link" href="/th/heart/leaderboard" prefetch={false}>{t("Navigation.heartLeaderboard")}</Link>
             <Link className="pixel-shell-link" href="/th/logo">{t("Navigation.logo")}</Link>
             <Link className="pixel-shell-link" href="/th/RobotDragGame">{t("Navigation.robotGame")}</Link>
           </nav>
@@ -49,9 +51,10 @@ export function SiteShell({ children }: SiteShellProps) {
       <main className="flex flex-1 flex-col">{children}</main>
 
       <footer id="stack" className="pixel-shell-bar shrink-0 border-t-4">
-        <div className="container mx-auto flex flex-col gap-3 px-6 py-6 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <p>{t("Navigation.appByNut")}</p>
-          <p>{t("Navigation.earlyAccessV02192")}</p>
+        <div className="container mx-auto grid grid-cols-1 items-center gap-4 px-4 py-6 text-center text-sm text-muted-foreground sm:px-6 lg:grid-cols-[1fr_auto_1fr]">
+          <p className="lg:justify-self-start lg:text-left">{t("Navigation.appByNut")}</p>
+          <VisitorStats />
+          <p className="lg:justify-self-end lg:text-right">{t("Navigation.earlyAccessV02192")}</p>
         </div>
       </footer>
     </div>

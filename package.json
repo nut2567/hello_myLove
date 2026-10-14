@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "check": "npm run lint && npm run typecheck",
     "test:auth": "bun --env-file=.env.local --conditions=react-server test --timeout=60000 tests/path-access-security.test.mjs",
+    "test:leaderboard": "bun --env-file=.env.local --conditions=react-server test --timeout=60000 tests/heart-game-leaderboard.test.mjs",
     "migrate:path-pins": "bun --conditions=react-server run scripts/migrate-path-pins.ts",
     "create:admin": "bun --conditions=react-server run scripts/create-admin.ts"
   },

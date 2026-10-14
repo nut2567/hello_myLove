@@ -1,9 +1,12 @@
 import crypto from "node:crypto";
 
 import { formatThaiDateTimeString, getCurrentDate } from "@/lib/date-time";
-import { getMongoDatabase } from "@/lib/mongodb";
-
-const VISITOR_EVENTS_COLLECTION_NAME = "visitor_events";
+import { getMongoClient, getMongoDatabase } from "@/lib/mongodb";
+import {
+  ensureVisitorStats,
+  incrementVisitorStats,
+  VISITOR_EVENTS_COLLECTION,
+} from "@/lib/visitor-stats";
 
 export type VisitorEventInput = {
   pathname: string;
@@ -40,6 +43,7 @@ function hashIp(ip: string | null): string {
 export async function saveVisitorEvent(
   payload: VisitorEventInput,
 ): Promise<void> {
+  const visitedAt = getCurrentDate();
   const document: VisitorEventDocument = {
     pathname: payload.pathname,
     ipHash: hashIp(payload.ip),
@@ -50,11 +54,24 @@ export async function saveVisitorEvent(
     region: payload.region,
     latitude: payload.latitude,
     longitude: payload.longitude,
-    createdAt: formatThaiDateTimeString(getCurrentDate()),
+    createdAt: formatThaiDateTimeString(visitedAt),
   };
 
   const db = await getMongoDatabase();
-  await db
-    .collection<VisitorEventDocument>(VISITOR_EVENTS_COLLECTION_NAME)
-    .insertOne(document);
+  const client = await getMongoClient();
+  const session = client.startSession();
+  try {
+    await session.withTransaction(async () => {
+      await ensureVisitorStats(db, session);
+      await db.collection<VisitorEventDocument>(VISITOR_EVENTS_COLLECTION)
+        .insertOne(document, { session });
+      await incrementVisitorStats(db, session, visitedAt);
+    }, {
+      readConcern: { level: "snapshot" },
+      writeConcern: { w: "majority" },
+      timeoutMS: 30_000,
+    });
+  } finally {
+    await session.endSession();
+  }
 }

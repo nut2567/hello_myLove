@@ -78,7 +78,8 @@ Useful local docs:
 - Next 16 uses `src/proxy.ts`, not middleware.
 - `proxy.ts` queues visitor tracking with `event.waitUntil()` and posts to `/api/visitor`.
 - Set `VISITOR_TRACKING_SECRET` so `proxy.ts` can authenticate requests to `/api/visitor`; tracking is skipped when it is missing.
-- Keep tracking non-blocking and avoid tracking static assets, auth APIs, visitor APIs, prefetches, and `/th` routes unless requirements change.
+- Keep tracking non-blocking. Count full HTML page opens/refreshes, including `/` and `/th` pages; exclude all APIs, static assets, prefetches, RSC requests, and the redirect-only `/th/heart` entry point.
+- `visitor_stats` stores lifetime and daily counts (Asia/Bangkok), initialized from historical `visitor_events`. Save events and increments in the same MongoDB transaction; the public statistics API exposes aggregate counts only.
 
 ## UI And Styling
 
@@ -106,6 +107,7 @@ Useful local docs:
   - `npm run build`
 - If dependencies change, update both `package-lock.json` and `bun.lock`. Docker uses `bun install --frozen-lockfile`.
 - Docker runtime listens on port `3600` and starts the standalone Next server with Bun.
+- Local CD uses `.githooks/post-commit` (installed per checkout with `scripts/install-local-cd.ps1`). It queues `scripts/deploy-local.ps1` in the background, builds an exact Git archive, checks a candidate container before switching, and rolls back failed starts. Preserve its ownership checks, lock, secret exclusions, and localhost port binding. Never create a commit just to trigger deployment unless requested.
 
 ## Validation
 

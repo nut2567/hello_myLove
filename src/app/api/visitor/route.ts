@@ -6,6 +6,7 @@ import {
   saveVisitorEvent,
   type VisitorEventInput,
 } from "@/lib/visitor-tracking";
+import { getVisitorStats } from "@/lib/visitor-stats";
 
 export const runtime = "nodejs";
 
@@ -164,6 +165,18 @@ function parseVisitorPayload(body: unknown): ParsedVisitorPayload | null {
     latitude,
     longitude,
   };
+}
+
+export async function GET() {
+  const headers = { "Cache-Control": "no-store" };
+  try {
+    return NextResponse.json(await getVisitorStats(), { headers });
+  } catch {
+    return NextResponse.json(
+      { error: "Failed to load visitor statistics." },
+      { status: 503, headers },
+    );
+  }
 }
 
 export async function POST(request: NextRequest) {

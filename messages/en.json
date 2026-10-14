@@ -36,7 +36,15 @@
     "enterPathAgain": "Enter path again",
     "viewStructure": "View structure"
   },
+  "VisitorStats": {
+    "title": "Website visit statistics",
+    "total": "Total visits",
+    "today": "Today",
+    "times": "visits",
+    "unavailable": "Visit statistics are currently unavailable"
+  },
   "Navigation": {
+    "heartLeaderboard": "Leaderboard",
     "structure": "Structure",
     "heart": "Heart",
     "logo": "Logo",
@@ -44,6 +52,22 @@
     "primary": "Primary navigation",
     "appByNut": "app by nutศึ",
     "earlyAccessV02192": "Early Access V0.2.192"
+  },
+  "HeartLeaderboard": {
+    "title": "Heart Game Leaderboard",
+    "publicAccess": "Open to everyone · No password required",
+    "description": "The top 50 players by their highest saved score. Players with the same score share the same rank.",
+    "play": "Play Heart Game",
+    "refresh": "Refresh scores",
+    "refreshing": "Refreshing…",
+    "rank": "Rank",
+    "player": "Player",
+    "bestScore": "Best score",
+    "tableDescription": "All-time best scores · Updated when you open or refresh this page",
+    "emptyTitle": "No saved scores yet",
+    "emptyDescription": "Play the heart game. Your score is saved when the game ends and can appear here.",
+    "loadError": "The leaderboard could not be loaded. Please try again.",
+    "retry": "Try again"
   },
   "Admin": {
     "title": "Manage users",

@@ -21,6 +21,51 @@ src/
   lib/                 Shared data and configuration
 ```
 
+## Local CD บน Windows: commit แล้ว deploy บนเครื่อง
+
+ติดตั้งครั้งเดียวจากรากโปรเจกต์:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/install-local-cd.ps1
+```
+
+ต้องเปิด Docker Desktop และตั้งค่า DB/Auth ใน `.env.local` บนเครื่อง
+commit แรกต้องรวมไฟล์ระบบ CD (`.githooks`, `.gitattributes`, `.dockerignore`, `scripts/*local*.ps1`,
+Dockerfile, Compose, `next.config.ts`, `public/.gitkeep` และ `/api/health`) ด้วย
+หลังจากนั้น `git commit` จะเริ่ม build/deploy เบื้องหลังโดยไม่ต้อง push และไม่ต้องใช้ `npm run dev`
+ไม่มีการสร้าง commit หรือ push อัตโนมัติ
+
+- Hook ใช้ `git archive` ของ commit นั้น จึงไม่รวมไฟล์ที่ยังไม่ได้ commit
+- Build ตรวจ Next.js production build, ESLint และ TypeScript ก่อนใช้งาน
+- ทดลอง container บนพอร์ต localhost ชั่วคราว และตรวจทั้งแอปกับการเชื่อมต่อ MongoDB ผ่าน `/api/health`
+- เมื่อพร้อมจึงสลับ container `hello-next` ที่ `http://localhost:3600` โดยมีช่วงหยุดสั้น ๆ ตอนเปลี่ยนพอร์ต
+  ถ้าเริ่ม container ใหม่ไม่สำเร็จ จะกลับไปใช้ container เดิม
+- มี lock ป้องกัน deploy ซ้อนกัน และข้าม commit เก่าเมื่อมี commit ใหม่กว่าอยู่ใน checkout
+- `.env.local` ใช้เฉพาะ runtime ไม่เข้า Git snapshot หรือ Docker image
+- Container รันแบบ production ด้วย `restart: unless-stopped`; จะกลับมารันเมื่อ Docker engine เริ่มทำงาน
+- Installer จะไม่เขียนทับ hooksPath หรือ hook เดิมที่ตั้งไว้
+
+ตรวจสถานะและ log (เก็บใน `.git/local-cd` สำหรับ checkout หลัก):
+
+```powershell
+Get-Content .git/local-cd/status.json
+$commit = git rev-parse HEAD
+Get-Content ".git/local-cd/logs/$commit.log" -Tail 40
+Get-Content ".git/local-cd/logs/$commit.error.log" -Tail 40
+```
+
+สั่ง deploy commit ปัจจุบันซ้ำได้ด้วย
+`powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/deploy-local.ps1`
+ถ้าต้องการเริ่มจากไฟล์ปัจจุบันก่อน commit ให้เพิ่ม `-WorkingTree` ซึ่งสถานะจะระบุว่าเป็น working tree
+หยุด/เริ่มเว็บด้วย `docker stop hello-next` และ `docker start hello-next`
+หากต้องข้าม deploy ชั่วคราว ให้ตั้ง `$env:HELLO_MYLOVE_SKIP_DEPLOY = '1'` ก่อน commit
+แล้วลบตัวแปรด้วย `Remove-Item Env:HELLO_MYLOVE_SKIP_DEPLOY`
+ปิด hook ถาวรใน checkout นี้ด้วย `git config --local --unset core.hooksPath`
+
+ทดสอบ archive, rollback, การป้องกัน container อื่น และ hook จาก commit จริงใน repo ชั่วคราวด้วย
+`powershell.exe -NoProfile -ExecutionPolicy Bypass -File tests/local-cd.test.ps1`
+การทดสอบนี้ใช้ Docker/HTTP จำลอง ไม่แก้ประวัติ Git หรือ container จริงของโปรเจกต์
+
 ## ภาษาและการตั้งค่าการอ่าน
 
 เลือก TH / EN และเปิด “ตั้งค่าการอ่าน” จากแถบหลักหรือแถบควบคุมในเกมหุ่นยนต์
@@ -43,6 +88,35 @@ src/
   และขนาดตัวอักษรหน่วย `rem` เพื่อรองรับการตั้งค่าร่วมกัน รูปภาพ วิดีโอ และฉาก WebGL คงสีเดิม
 
 ตรวจตรรกะค่าการอ่านและคำแปลด้วย `bun test tests/ui-preferences.test.mjs`
+
+## สถิติการเข้าชมเว็บ
+
+Footer แสดงยอดเข้าชมสะสมและยอดวันนี้ โดยแบ่งวันตามเวลา `Asia/Bangkok`
+นับการเปิดหน้าเว็บหรือรีเฟรชที่เป็น HTML GET รวมหน้าแรกและหน้า `/th/...`
+ไม่นับ API, ไฟล์ประกอบเว็บ, prefetch หรือ RSC fetch จากการเปลี่ยนหน้า/เปลี่ยน query ในแอป
+หน้า `/th/heart` ที่ redirect จะนับเมื่อเปิดหน้าปลายทางแทน
+
+- ตั้งค่า `VISITOR_TRACKING_SECRET`, `DATABASE_NAME` และ `nana_technology_MONGODB_URI` ใน environment
+- Proxy ส่งบันทึกไป `POST /api/visitor` แบบ background โดยตรวจ shared secret ฝั่งเซิร์ฟเวอร์
+- `visitor_events` เก็บบันทึกเดิมพร้อม IP ที่ hash แล้ว
+- `visitor_stats` เก็บเอกสาร `_id: "site"` พร้อม `total`, ยอด `daily` แยกวันที่ `YYYY-MM-DD`, `createdAt` และ `updatedAt`
+- ครั้งแรกจะรวมบันทึกเก่าที่มีใน `visitor_events` เป็นยอดเริ่มต้น แล้วเพิ่มบันทึกและยอดใหม่ใน MongoDB transaction เดียวกัน
+  จึงต้องใช้ MongoDB replica set หรือ MongoDB Atlas ยอดก่อนเริ่มมีบันทึกจะไม่สามารถกู้คืนได้
+- `GET /api/visitor` เปิดเผยเฉพาะ `{ total, today, date }` และไม่ cache
+  Footer อ่านใหม่ทุก 60 วินาทีและเมื่อกลับมาที่แท็บ หาก DB ใช้งานไม่ได้จะไม่แสดงยอดศูนย์แทนข้อมูลจริง
+
+ทดสอบจำนวนพร้อมกัน การนำยอดเก่ามารวม และการข้ามเที่ยงคืนเวลาไทยด้วย
+`bun --env-file=.env.local --conditions=react-server test --timeout=60000 tests/visitor-stats.test.mjs`
+การทดสอบใช้เฉพาะ collection ชั่วคราวที่มี prefix `codex_visitor_test_` ในฐานข้อมูล `development`
+
+## กระดานคะแนนเกมหัวใจ
+
+- เปิด `/th/heart/leaderboard` หรือเมนู “กระดานคะแนน” ได้โดยไม่ต้องเข้าสู่ระบบหรือใส่รหัสผ่าน เช่นเดียวกับหน้าเกมใน `/th`
+- แสดง 50 อันดับแรกจากคะแนนสูงสุดตลอดการเล่นที่บันทึกใน `heart_game` โดยแต่ละผู้เล่นแสดงหนึ่งรายการ คะแนนเท่ากันใช้อันดับเดียวกัน (เช่น 1, 1, 3)
+- ผู้เล่น Guest/Named แยกด้วย `playerId`; คะแนนบัญชีที่ไม่มี `playerId` และข้อมูลเก่าแยกด้วยชื่อที่บันทึกไว้ Guest คนละรหัสจึงมีชื่อซ้ำกันได้
+- แสดงเฉพาะชื่อ คะแนน และอันดับ ไม่แสดงรหัสผู้เล่นหรือข้อมูลพื้นที่ส่วนตัว ข้อมูลอัปเดตเมื่อเปิดหน้าหรือกดรีเฟรช
+- ใช้คะแนนที่บันทึกเมื่อจบเกม ไม่ใช่คะแนนระหว่างเล่น และยังใช้การตรวจสอบคะแนนเดิมของเกม
+- ตรวจการจัดอันดับด้วย `npm run test:leaderboard` โดยต้องตั้ง `DATABASE_NAME=development` ใน `.env.local`; ใช้ collection ชั่วคราวแยกจากข้อมูลจริงและลบเมื่อจบการทดสอบ
 
 ## Robot Drag Game V2 Notes
 
