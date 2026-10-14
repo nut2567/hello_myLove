@@ -33,6 +33,10 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+*.tar
+*.tar.sha256
+.docker_temp_*
+.docker-save-*.tmp
 
 # vercel
 .vercel

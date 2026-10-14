@@ -15,4 +15,27 @@ coverage
 *.tsbuildinfo
 next-env.d.ts
 *-debug.log*
+
 /tests/*
+/scripts/*
+
+Dockerfile
+docker-compose.yml
+*.tar
+*.tar.sha256
+.docker_temp_*
+.docker-save-*.tmp
+
+
+# Claude/AI folders & files
+.agent/
+.agents/
+.ai/
+.codex/
+.claude/
+.junie/
+.superpowers/
+.mcp.json
+.rules
+.output.txt
+skills-lock.json
