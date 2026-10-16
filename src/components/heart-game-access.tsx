@@ -44,11 +44,11 @@ export function HeartGameAccess({ children, initialExpiry, siteKey }: {
   if (expiresAt) return children;
 
   return (
-    <section className="grid w-full place-items-center overflow-y-auto px-5 py-8">
-      <div className="pixel-panel grid w-full max-w-md gap-5 p-5 sm:p-7">
-        <h1 className="text-xl font-bold text-lime-200">{t("heartTitle")}</h1>
+    <section className="grid w-full place-items-center overflow-y-auto px-3 py-8 sm:px-5">
+      <div className="pixel-panel grid w-full max-w-md gap-5 p-4 sm:p-7">
+        <h1 className="text-balance text-center text-xl font-bold leading-8 text-lime-200">{t("heartTitle")}</h1>
         <Recaptcha key={attempt} siteKey={siteKey} onChange={setToken} />
-        {error && <p role="alert" className="text-sm text-red-200">{t("verificationFailed")}</p>}
+        {error && <p role="alert" className="text-center text-sm leading-6 text-red-200">{t("verificationFailed")}</p>}
         <button type="button" className="pixel-button min-h-12 px-4 text-sm disabled:cursor-not-allowed disabled:opacity-60"
           disabled={pending || !token} onClick={() => void verify()}>
           {t(pending ? "verifying" : "startGame")}

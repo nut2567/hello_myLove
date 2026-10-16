@@ -2,9 +2,10 @@
 
 import { useTranslations } from "next-intl";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useId } from "react";
 import { IoAccessibilityOutline, IoClose } from "react-icons/io5";
 import { useUiPreferences } from "@/components/ui-preferences-provider";
+import { useAnchoredPopover } from "@/components/layout/use-anchored-popover";
 
 import {
   colorThemes,
@@ -27,9 +28,7 @@ const themeLabels = {
 
 export function AccessibilityControls() {
   const id = useId();
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const popoverRef = useRef<HTMLDivElement>(null);
-  const [isOpen, setIsOpen] = useState(false);
+  const { triggerRef, popoverRef, isOpen, setIsOpen } = useAnchoredPopover();
   const t = useTranslations("AccessibilitySettings");
   const commonT = useTranslations("Common");
   const {
@@ -41,46 +40,6 @@ export function AccessibilityControls() {
     setColorTheme,
     resetAppearance,
   } = useUiPreferences();
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const trigger = triggerRef.current;
-    const popover = popoverRef.current;
-    if (!trigger || !popover) return;
-
-    function positionPopover() {
-      if (!trigger || !popover) return;
-      const margin = 16;
-      const gap = 12;
-      const anchor = trigger.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
-      const height = Math.min(
-        popover.scrollHeight + 8,
-        viewportHeight - margin * 2,
-      );
-      const below = Math.max(0, viewportHeight - margin - anchor.bottom - gap);
-      const above = Math.max(0, anchor.top - gap - margin);
-      const openBelow = below >= height || below >= above;
-      const availableHeight = openBelow ? below : above;
-
-      popover.style.maxHeight = `${availableHeight}px`;
-      const bounds = popover.getBoundingClientRect();
-      popover.style.left = `${Math.max(margin, Math.min(anchor.right - bounds.width, window.innerWidth - bounds.width - margin))}px`;
-      popover.style.top = `${Math.max(margin, Math.min(openBelow ? anchor.bottom + gap : anchor.top - gap - bounds.height, viewportHeight - bounds.height - margin))}px`;
-    }
-
-    positionPopover();
-    const observer = new ResizeObserver(positionPopover);
-    observer.observe(trigger);
-    observer.observe(popover);
-    window.addEventListener("resize", positionPopover);
-    window.addEventListener("scroll", positionPopover, true);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", positionPopover);
-      window.removeEventListener("scroll", positionPopover, true);
-    };
-  }, [isOpen, locale, fontSize]);
 
   return (
     <div className="accessibility-controls shrink-0">

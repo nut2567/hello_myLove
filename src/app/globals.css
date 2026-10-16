@@ -417,13 +417,15 @@ button:disabled,
   color: var(--accent-foreground);
 }
 
-.accessibility-controls :focus-visible {
+.accessibility-controls :focus-visible,
+.mobile-navigation :focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 4px;
 }
 
 /* The native popover stays above sticky headers and game overlays. */
-.accessibility-popover {
+.accessibility-popover,
+.mobile-navigation-popover {
   position: fixed;
   inset: auto;
   margin: 0;
@@ -433,11 +435,13 @@ button:disabled,
   overscroll-behavior: contain;
 }
 
-.accessibility-popover:popover-open {
+.accessibility-popover:popover-open,
+.mobile-navigation-popover:popover-open {
   display: grid;
 }
 
-.accessibility-controls > button[aria-expanded="true"] {
+.accessibility-controls > button[aria-expanded="true"],
+.mobile-navigation > button[aria-expanded="true"] {
   outline: 2px solid var(--ring);
   outline-offset: 4px;
 }

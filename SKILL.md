@@ -17,7 +17,8 @@ Use this skill with this checkout's `AGENTS.md` and `CODEX.md`. All paths below 
 6. Run validation:
    - `npm run check` for code changes (ESLint and TypeScript).
    - Also run `npm run build` for routes, server actions, route handlers, auth, DB, config, dependencies, or Docker changes.
-   - For UI/game changes, verify the affected route in a browser when tooling is available. Check the changed behavior on desktop and mobile when relevant. Reuse a suitable running server or choose a free port; stop servers started for the task unless the user asks to keep them running.
+   - For UI/game changes, verify the affected route in a browser when tooling is available. Check the changed behavior on desktop and mobile when relevant. Reuse a suitable running server or choose a free port. Record existing browser tabs and server listeners before testing, open a dedicated test tab, and track the tab IDs and server processes created for this task.
+   - Before finishing, close every test tab/window and stop every server created for this task, unless the user explicitly asks to keep them open. Verify the owned tabs are gone and the owned ports are closed; preserve pre-existing user tabs, browsers, and servers. Report cleanup in the final response. Follow the installed `dev-server-cleanup` skill for the full cleanup workflow.
    - For skill/documentation-only changes, validate the skill frontmatter and referenced paths; application builds are unnecessary.
 
 ## Local Next.js Guides
