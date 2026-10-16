@@ -109,6 +109,36 @@ Footer แสดงยอดเข้าชมสะสมและยอดว�
 `bun --env-file=.env.local --conditions=react-server test --timeout=60000 tests/visitor-stats.test.mjs`
 การทดสอบใช้เฉพาะ collection ชั่วคราวที่มี prefix `codex_visitor_test_` ในฐานข้อมูล `development`
 
+## reCAPTCHA สำหรับแอดมินและเกมหัวใจ
+
+Widget ใช้ [`react-google-recaptcha`](https://github.com/dozoisch/react-google-recaptcha)
+เพื่อโหลด Google SDK และจัดการการแสดงผล ส่วนการตรวจ token ยังทำบนเซิร์ฟเวอร์
+
+ลงทะเบียน [Google reCAPTCHA v2 แบบ “I'm not a robot” Checkbox](https://www.google.com/recaptcha/admin/create)
+เพิ่มโดเมนที่ใช้งานจริง (และ `localhost` สำหรับพัฒนา) โดยเปิดการตรวจสอบโดเมนของ Google ไว้
+แล้วตั้งค่าใน `.env.local` หรือ environment ของเซิร์ฟเวอร์:
+
+```dotenv
+RECAPTCHA_SITE_KEY=<v2-checkbox-site-key>
+RECAPTCHA_SECRET_KEY=<v2-checkbox-secret-key>
+```
+
+ใช้คีย์ของ **v2 Checkbox** ให้ตรงกับ widget นี้ โดย Site key ใช้แสดง widget
+และ Secret key ใช้เฉพาะฝั่งเซิร์ฟเวอร์ ส่วน response token จะสร้างอัตโนมัติหลังผู้ใช้ยืนยัน
+ไม่ต้องสร้างหรือใส่ token ลง environment
+
+- อ่านคีย์ตอน runtime จึงใช้กับ Docker/CD ผ่าน `env_file` เดิมได้ ไม่ต้องส่ง secret เข้า build หรือ client
+- ต้องยืนยันก่อนล็อกอิน `/admin` ทุกครั้ง ตรวจ token ใน credentials provider โดยตรง
+  เซสชันเก่าหรือเซสชันจาก `path-access` ต้องล็อกอินแอดมินใหม่ และยังตรวจ `role=admin` จากฐานข้อมูลเหมือนเดิม
+- ต้องยืนยันก่อนเล่น `/th/heart/[id]` ทั้ง Guest, Named, ผู้เล่นเดิมใน localStorage และบัญชีที่ล็อกอิน
+  ผลยืนยันเก็บใน cookie ที่ลงลายเซ็นและเป็น HttpOnly, SameSite=Strict อายุ 2 ชั่วโมง
+  ไม่ถามซ้ำทุกคลิก และตรวจ cookie ฝั่งเซิร์ฟเวอร์ก่อนสร้างผู้เล่นหรือบันทึกคะแนน
+- กระดานคะแนนยังเปิดดูได้ตามปกติ หากคีย์ไม่ครบ, token หมดอายุ หรือ Google ตรวจสอบไม่ได้ จะไม่อนุญาตให้ผ่าน
+- Google token ใช้ได้ครั้งเดียว เมื่อเข้าสู่ระบบไม่สำเร็จต้องยืนยันใหม่
+  ตาม [เอกสารการตรวจสอบ token](https://developers.google.com/recaptcha/docs/verify)
+- ทดสอบการปฏิเสธ token, การปลอม/หมดอายุ cookie และการเรียกข้ามขั้นตอนด้วย
+  `bun --conditions=react-server test tests/recaptcha.test.mjs` (จำลอง Google และฐานข้อมูล ไม่ใช้ข้อมูลจริง)
+
 ## กระดานคะแนนเกมหัวใจ
 
 - เปิด `/th/heart/leaderboard` หรือเมนู “กระดานคะแนน” ได้โดยไม่ต้องเข้าสู่ระบบหรือใส่รหัสผ่าน เช่นเดียวกับหน้าเกมใน `/th`

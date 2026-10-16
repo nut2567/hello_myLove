@@ -9,12 +9,14 @@ import { AdminLoginForm } from "@/components/admin/admin-forms";
 import { UserManager } from "@/components/admin/user-manager";
 import { getAdminByName, listManagedUsers } from "@/lib/admin-users";
 import { logoutAdmin } from "./actions";
+import { getRecaptchaSiteKey } from "@/lib/recaptcha";
 
 export const metadata: Metadata = { title: "จัดการผู้ใช้", robots: { index: false, follow: false } };
 
 export default async function AdminPage() {
   const session = await auth();
-  const admin = await getAdminByName(session?.user?.pathName);
+  const admin = session?.user?.adminCaptchaVerified
+    ? await getAdminByName(session.user.pathName) : null;
   if (!admin) {
     return (
       <section className="mx-auto flex w-full max-w-lg flex-1 items-center px-6 py-14">
@@ -22,7 +24,7 @@ export default async function AdminPage() {
           <MdAdminPanelSettings className="text-cyan-200" size={42} aria-hidden />
           <h1 className="mt-4 text-2xl font-bold"><TranslatedText messageKey={"Admin.title"} /></h1>
           <p className="mt-3 text-sm leading-6 text-muted-foreground"><TranslatedText messageKey={"Admin.signInWithAnAdminAccountToCreateUsersAnd"} /></p>
-          <AdminLoginForm />
+          <AdminLoginForm siteKey={getRecaptchaSiteKey()} />
           <Link className="mt-6 inline-block text-sm text-cyan-200 underline underline-offset-4" href="/"><TranslatedText messageKey={"Admin.backToHome"} /></Link>
         </div>
       </section>

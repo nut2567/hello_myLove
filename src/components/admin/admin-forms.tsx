@@ -6,6 +6,7 @@ import { useActionState, useRef, useState } from "react";
 import { MdAdd, MdDeleteOutline, MdPersonAdd, MdLogin, MdSave } from "react-icons/md";
 import { createUser, loginAdmin, updateUser } from "@/app/(site)/admin/actions";
 import type { AdminFormState, ManagedUser } from "@/lib/admin-users";
+import { Recaptcha } from "@/components/recaptcha";
 
 const INITIAL_STATE: AdminFormState = { status: "idle", message: "" };
 const INPUT_CLASS = "pixel-input w-full px-3 py-3 text-sm";
@@ -16,17 +17,29 @@ export function FormMessage({ state }: { state: AdminFormState }) {
   return <p role={state.status === "error" ? "alert" : "status"} className={`border-l-4 px-4 py-3 text-sm leading-6 ${state.status === "error" ? "border-fuchsia-300 bg-fuchsia-950/40 text-fuchsia-200" : "border-lime-300 bg-lime-950/40 text-lime-200"}`}>{state.message}</p>;
 }
 
-export function AdminLoginForm() {
+export function AdminLoginForm({ siteKey }: { siteKey: string }) {
   const t = useTranslations();
-  const [state, action, pending] = useActionState(loginAdmin, INITIAL_STATE);
+  const [token, setToken] = useState("");
+  const [attempt, setAttempt] = useState(0);
+  const [state, action, pending] = useActionState(async (previous: AdminFormState, formData: FormData) => {
+    try {
+      return await loginAdmin(previous, formData);
+    } finally {
+      // Google tokens are single use, including failed password attempts.
+      setToken("");
+      setAttempt(value => value + 1);
+    }
+  }, INITIAL_STATE);
   return (
     <form action={action} className="mt-7 grid gap-5">
       <label className="grid gap-2 text-sm" htmlFor="admin-name">{t("Admin.accountName")}<input className={INPUT_CLASS} id="admin-name" name="name" autoComplete="username" autoCapitalize="none" spellCheck={false} defaultValue="admin" required maxLength={64} />
       </label>
       <label className="grid gap-2 text-sm" htmlFor="admin-pin">{t("Common.password")}<input className={INPUT_CLASS} id="admin-pin" name="pin" type="password" autoComplete="current-password" required />
       </label>
+      <Recaptcha key={attempt} siteKey={siteKey} onChange={setToken} />
+      <input type="hidden" name="recaptchaToken" value={token} />
       <FormMessage state={state} />
-      <button className={BUTTON_CLASS} disabled={pending} type="submit"><MdLogin aria-hidden size={21} />{t(pending ? "Admin.signingIn" : "Admin.signInAsAdmin")}</button>
+      <button className={BUTTON_CLASS} disabled={pending || !token} type="submit"><MdLogin aria-hidden size={21} />{t(pending ? "Admin.signingIn" : "Admin.signInAsAdmin")}</button>
     </form>
   );
 }

@@ -6,6 +6,7 @@ declare module "next-auth" {
       pathName?: string;
       pathType?: string | null;
       pathSessionId?: string;
+      adminCaptchaVerified?: boolean;
     } & DefaultSession["user"];
   }
 
@@ -13,6 +14,7 @@ declare module "next-auth" {
     pathName?: string;
     pathType?: string | null;
     pathSessionId?: string;
+    adminCaptchaVerified?: boolean;
   }
 }
 
@@ -21,5 +23,6 @@ declare module "next-auth/jwt" {
     pathName?: string;
     pathType?: string | null;
     pathSessionId?: string;
+    adminCaptchaVerified?: boolean;
   }
 }

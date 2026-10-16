@@ -67,6 +67,11 @@ mock.module("next-auth", () => ({
     };
   },
 }));
+// CAPTCHA boundary failures are tested separately; these DB fixtures use a verified token.
+mock.module("../src/lib/recaptcha.ts", () => ({
+  verifyRecaptcha: async token => token === "fixture-captcha",
+  getRecaptchaSiteKey: () => "fixture-site-key",
+}));
 const authentication = await import("../src/auth.ts");
 const pathSessions = await import("../src/lib/path-session.ts");
 const adminUsers = await import("../src/lib/admin-users.ts");
@@ -91,6 +96,7 @@ const routeDependencies = {
   "@/components/path-access-form": { PathAccessForm: formComponent },
   "@/components/welcome-pixel-modal": { WelcomePixelModal: "welcome" },
   "@/components/ui/button-link": { ButtonLink: "button-link" },
+  "@/components/translated-text": { TranslatedText: "translated-text" },
 };
 const source = readFileSync(new URL("../src/app/(site)/[[...slug]]/page.tsx", import.meta.url), "utf8");
 const compiled = ts.transpileModule(source, {
@@ -268,7 +274,7 @@ test("admin edit/delete actions reject anonymous, ordinary and revoked admin acc
     expect((await adminActions.deleteUser({}, form)).status).toBe("error");
   }
   await isolatedDb.collection("user").updateOne({name:"admin"}, {$unset:{role:""}});
-  session = {user:{pathName:"admin"}};
+  session = {user:{pathName:"admin",adminCaptchaVerified:true}};
   expect((await adminActions.updateUser({}, form)).status).toBe("error");
   expect((await adminActions.deleteUser({}, form)).status).toBe("error");
   expect(await isolatedDb.collection("user").findOne({name:"victim"})).not.toBeNull();
@@ -276,7 +282,7 @@ test("admin edit/delete actions reject anonymous, ordinary and revoked admin acc
 
 test("admin editing preserves a blank password, renames safely and rejects duplicate/reserved names", async () => {
   await seedAdmin(); await seedUser("original"); await seedUser("taken");
-  session = {user:{pathName:"admin"}};
+  session = {user:{pathName:"admin",adminCaptchaVerified:true}};
   const target = await isolatedDb.collection("user").findOne({name:"original"});
   const originalHash = target.pinHash;
   for(const name of ["taken", "th"]) {
@@ -299,7 +305,7 @@ test("admin password resets revoke old tokens and require the new password on th
   const identity = await paths.getPathCredentialIdentity({name:"victim",pin:"fixture-password"});
   const oldSession = {user:{pathName:"victim",pathSessionId:identity.sessionId}};
   expect(await pathSessions.isPathSessionCurrent(oldSession,"victim")).toBe(true);
-  session = {user:{pathName:"admin"}};
+  session = {user:{pathName:"admin",adminCaptchaVerified:true}};
   const target = await isolatedDb.collection("user").findOne({name:"victim"});
   const form = mutationForm(target,{pin:"new-fixture-password",confirmPin:"new-fixture-password"});
   expect((await adminActions.updateUser({},form)).status).toBe("success");
@@ -315,7 +321,7 @@ test("admin password resets revoke old tokens and require the new password on th
 
 test("admin deletion requires the exact name and a fresh correct admin password each time", async () => {
   await seedAdmin(); await seedUser("victim"); await seedUser("second-victim");
-  session = {user:{pathName:"admin"}};
+  session = {user:{pathName:"admin",adminCaptchaVerified:true}};
   const target = await isolatedDb.collection("user").findOne({name:"victim"});
   for(const [key,value] of [["confirmName","VICTIM"],["confirmName","victim "],["adminPin",""],["adminPin","wrong-password"]]) {
     const form = mutationForm(target); form.set(key,value);
@@ -334,7 +340,7 @@ test("admin deletion requires the exact name and a fresh correct admin password 
 
 test("admin records and changed/recreated targets are protected against stale edit/delete forms", async () => {
   await seedAdmin(); await seedUser("victim");
-  session = {user:{pathName:"admin"}};
+  session = {user:{pathName:"admin",adminCaptchaVerified:true}};
   const administrator = await isolatedDb.collection("user").findOne({name:"admin"});
   expect((await adminActions.updateUser({},mutationForm(administrator))).status).toBe("error");
   expect((await adminActions.deleteUser({},mutationForm(administrator))).status).toBe("error");
@@ -351,7 +357,7 @@ test("admin records and changed/recreated targets are protected against stale ed
 
 test("admin deletion throttles repeated password guesses including direct action calls", async () => {
   await seedAdmin(); await seedUser("victim");
-  session = {user:{pathName:"admin"}};
+  session = {user:{pathName:"admin",adminCaptchaVerified:true}};
   const target = await isolatedDb.collection("user").findOne({name:"victim"});
   const incorrect = mutationForm(target); incorrect.set("adminPin","wrong-password");
   for(let index=0;index<PATH_ACCESS_PATH_LIMIT;index++) expect((await adminActions.deleteUser({},incorrect)).status).toBe("error");
@@ -366,7 +372,7 @@ test("recreating a deleted user's name does not restore access to old sessions",
   const identity = await paths.getPathCredentialIdentity({name:"victim",pin:"new-user-password"});
   const tokenSession = {user:{pathName:"victim",pathSessionId:identity.sessionId}};
   const target = await isolatedDb.collection("user").findOne({name:"victim"});
-  session = {user:{pathName:"admin"}};
+  session = {user:{pathName:"admin",adminCaptchaVerified:true}};
   expect((await adminActions.deleteUser({},mutationForm(target))).status).toBe("success");
   expect(await pathSessions.isPathSessionCurrent(tokenSession,"victim")).toBe(false);
   expect((await adminUsers.createManagedUser("admin",managedUserForm("victim"))).status).toBe("success");
@@ -376,7 +382,7 @@ test("recreating a deleted user's name does not restore access to old sessions",
 
 test("renaming and restoring a user name does not reactivate old sessions", async () => {
   await seedAdmin(); await seedUser("original");
-  session = {user:{pathName:"admin"}};
+  session = {user:{pathName:"admin",adminCaptchaVerified:true}};
   const identity = await paths.getPathCredentialIdentity({name:"original",pin:"fixture-password"});
   const oldSession = {user:{pathName:"original",pathSessionId:identity.sessionId}};
   let target = await isolatedDb.collection("user").findOne({name:"original"});
@@ -497,14 +503,14 @@ test("admin creation action denies anonymous and normal users, including forged 
   await seedUser();
   const form = managedUserForm("forbidden", { role: "admin" });
   expect((await adminActions.createUser({}, form)).status).toBe("error");
-  session = { user: { pathName: "alpha", role: "admin", pathType: "Administrator" } };
+  session = { user: { pathName: "alpha", role: "admin", pathType: "Administrator", adminCaptchaVerified: true } };
   expect((await adminActions.createUser({}, form)).status).toBe("error");
   expect(await isolatedDb.collection("user").findOne({ name: "forbidden" })).toBeNull();
 });
 
 test("admin creates a normal user with hashed password and valid optional music, without exposing credentials", async () => {
   await seedAdmin();
-  session = { user: { pathName: "admin" } };
+  session = { user: { pathName: "admin", adminCaptchaVerified: true } };
   const form = managedUserForm("New-Person", { role: "admin" });
   form.append("musicUrl", "https://example.com/music"); form.append("musicRate", "8.5");
   form.append("musicUrl", "https://example.com/video"); form.append("musicRate", "");
@@ -551,7 +557,7 @@ test("admin creation refuses an existing user and concurrent duplicates without 
 }, 30_000);
 
 test("revoked admin role blocks creation even with an existing admin session", async () => {
-  await seedAdmin(); session = { user: { pathName: "admin" } };
+  await seedAdmin(); session = { user: { pathName: "admin", adminCaptchaVerified: true } };
   expect(await adminUsers.getAdminByName("admin")).not.toBeNull();
   await isolatedDb.collection("user").updateOne({ name: "admin" }, { $unset: { role: "" } });
   expect(await adminUsers.getAdminByName("admin")).toBeNull();
@@ -561,7 +567,8 @@ test("revoked admin role blocks creation even with an existing admin session", a
 
 test("admin provider rejects normal/unknown accounts and throttles direct API attempts", async () => {
   await seedAdmin(); await seedUser();
-  const authorize = authConfig.providers.find(item => item.options.id === "admin-access").options.authorize;
+  const providerAuthorize = authConfig.providers.find(item => item.options.id === "admin-access").options.authorize;
+  const authorize = (credentials, request) => providerAuthorize({ ...credentials, recaptchaToken: "fixture-captcha" }, request);
   const request = new Request("http://localhost/api/auth/callback/admin-access", { headers });
   expect(await authorize({ path: "alpha", pin: "fixture-password" }, request)).toBeNull();
   expect(await authorize({ path: "unknown-admin", pin: "fixture-password" }, request)).toBeNull();

@@ -5,6 +5,8 @@ import { Suspense } from "react";
 import { HeartGameClient } from "@/components/heart-game-client";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
+import { getRecaptchaSiteKey } from "@/lib/recaptcha";
+import { getHeartGameAccessExpiry } from "@/lib/heart-game-access";
 import {
   getHeartPosition,
   isHeartId,
@@ -44,6 +46,8 @@ export default async function HeartIdPage({ params }: HeartIdPageProps) {
           className="absolute -translate-x-1/2 -translate-y-1/2"
           currentHeartId={heartId}
           authenticatedPlayerName={session?.user?.pathName ?? null}
+          captchaExpiry={await getHeartGameAccessExpiry()}
+          recaptchaSiteKey={getRecaptchaSiteKey()}
           style={position}
         />
       </Suspense>

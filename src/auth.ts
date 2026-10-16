@@ -8,6 +8,11 @@ import {
 } from "@/lib/path-access";
 import { normalizePathPin } from "@/lib/path-password";
 import { isPathSessionCurrent } from "@/lib/path-session";
+import { verifyRecaptcha } from "@/lib/recaptcha";
+
+class AdminCaptchaRequired extends CredentialsSignin {
+  code = "captcha-required";
+}
 
 class PathAccessRateLimited extends CredentialsSignin {
   code = "rate-limited";
@@ -40,15 +45,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       credentials: {
         path: { label: "Admin account", type: "text" },
         pin: { label: "Password", type: "password" },
+        recaptchaToken: { label: "reCAPTCHA", type: "text" },
       },
       async authorize(credentials, request) {
         const name = normalizePathNameValue(credentials.path);
         const pin = normalizePathPin(credentials.pin);
         if (!name || !pin) return null;
+        if (!await verifyRecaptcha(credentials.recaptchaToken)) throw new AdminCaptchaRequired();
         const result = await authenticateAdminUser({ name, pin, headers: request.headers });
         if (result.status === "rate-limited") throw new PathAccessRateLimited();
         if (result.status !== "authenticated") return null;
-        return { id: result.user.name, name: result.user.name, pathName: result.user.name, pathType: result.user.type, pathSessionId: result.sessionId };
+        return { id: result.user.name, name: result.user.name, pathName: result.user.name, pathType: result.user.type, pathSessionId: result.sessionId, adminCaptchaVerified: true };
       },
     }),
     Credentials({
@@ -90,6 +97,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.pathName = user.pathName;
         token.pathType = user.pathType;
         token.pathSessionId = user.pathSessionId;
+        token.adminCaptchaVerified = user.adminCaptchaVerified === true;
       }
 
       return token;
@@ -105,6 +113,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.pathType =
           typeof token.pathType === "string" ? token.pathType : null;
         session.user.pathSessionId = typeof token.pathSessionId === "string" ? token.pathSessionId : undefined;
+        session.user.adminCaptchaVerified = token.adminCaptchaVerified === true;
         if (session.user.pathName && !await isPathSessionCurrent(session, session.user.pathName)) {
           return { expires: session.expires };
         }

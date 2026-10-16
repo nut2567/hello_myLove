@@ -1,4 +1,14 @@
 {
+  "Recaptcha": {
+    "instruction": "Please confirm that you are not a robot.",
+    "notConfigured": "Verification is not configured. Please contact the site administrator.",
+    "loading": "Loading reCAPTCHA…",
+    "loadFailed": "Could not load reCAPTCHA. Check your connection and reload this page.",
+    "verificationFailed": "Verification failed or expired. Please verify again. Reload the page if needed.",
+    "heartTitle": "Verify before playing the heart game",
+    "verifying": "Verifying…",
+    "startGame": "Continue to game"
+  },
   "AccessibilitySettings": {
     "language": "Language",
     "switchToThai": "Switch to Thai",

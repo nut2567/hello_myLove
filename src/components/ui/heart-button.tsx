@@ -327,7 +327,9 @@ export function HeartButton({
 
       if (!result.ok) {
         setPlayerSaveError(
-          result.reason === "invalid-player-name"
+          result.reason === "captcha-required"
+            ? "Recaptcha.verificationFailed"
+            : result.reason === "invalid-player-name"
             ? "HeartGame.enterANameBetween1And40Characters"
             : "HeartGame.playerTypeIsInvalid",
         );

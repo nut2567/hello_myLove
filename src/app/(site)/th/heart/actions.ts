@@ -6,6 +6,8 @@ import { auth } from "@/auth";
 import { formatThaiDateTimeString, getCurrentDate } from "@/lib/date-time";
 import { getMongoDatabase } from "@/lib/mongodb";
 import { isHeartId } from "@/lib/heart-id";
+import { getHeartGameAccessExpiry, grantHeartGameAccess } from "@/lib/heart-game-access";
+import { verifyRecaptcha } from "@/lib/recaptcha";
 
 const HEART_GAME_SCORE_COLLECTION_NAME = "heart_game";
 const MAX_PLAYER_NAME_LENGTH = 40;
@@ -40,14 +42,14 @@ type CreateHeartGamePlayerInput = {
 
 export type CreateHeartGamePlayerResult =
   | { ok: true; player: HeartGamePlayer }
-  | { ok: false; reason: "invalid-player-type" | "invalid-player-name" };
+  | { ok: false; reason: "invalid-player-type" | "invalid-player-name" | "captcha-required" };
 
 export type SaveHeartGameScoreResult =
   | { ok: true; saved: true }
   | {
       ok: false;
       saved: false;
-      reason: "invalid-score" | "invalid-heart-id" | "invalid-player";
+      reason: "invalid-score" | "invalid-heart-id" | "invalid-player" | "captcha-required";
     };
 
 function isValidScore(score: number): boolean {
@@ -101,6 +103,7 @@ export async function createHeartGamePlayer({
   name,
   type,
 }: CreateHeartGamePlayerInput): Promise<CreateHeartGamePlayerResult> {
+  if (!await getHeartGameAccessExpiry()) return { ok: false, reason: "captcha-required" };
   if (type !== "guest" && type !== "named") {
     return { ok: false, reason: "invalid-player-type" };
   }
@@ -126,6 +129,7 @@ export async function saveHeartGameScore({
   player,
   score,
 }: SaveHeartGameScoreInput): Promise<SaveHeartGameScoreResult> {
+  if (!await getHeartGameAccessExpiry()) return { ok: false, saved: false, reason: "captcha-required" };
   const session = await auth();
   const pathName = session?.user?.pathName;
   const pathType = session?.user?.pathType ?? null;
@@ -160,4 +164,11 @@ export async function saveHeartGameScore({
     .insertOne(document);
 
   return { ok: true, saved: true };
+}
+
+export async function verifyHeartGameAccess(token: string): Promise<
+  { ok: true; expiresAt: number } | { ok: false }
+> {
+  if (!await verifyRecaptcha(token)) return { ok: false };
+  return { ok: true, expiresAt: await grantHeartGameAccess() };
 }
