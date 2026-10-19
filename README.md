@@ -10,6 +10,14 @@ This app is structured for [Next.js 16](https://nextjs.org/docs) and
 - Tailwind CSS 4 with `@tailwindcss/postcss`
 - TypeScript, ESLint flat config, and the `src` application folder
 
+## Dependency compatibility
+
+MongoDB is pinned to `7.6.0` and BSON to `7.2.0` so the app and integration tests
+remain compatible with the local Bun `1.3.0` runtime. BSON `7.3.x` calls
+`node:v8.startupSnapshot.isBuildingSnapshot()` during import, which throws in that
+Bun version. MongoDB `7.7.0` requires BSON `7.3.2` or newer. Revisit both pins after
+upgrading Bun and verifying the authentication, leaderboard, and visitor tests.
+
 ## Project Structure
 
 ```txt
